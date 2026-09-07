@@ -113,7 +113,7 @@ pub fn start_recording(app: &AppHandle, params: StartParams) -> Result<ActiveRec
                 elapsed_sec: t.elapsed_sec,
                 level_db: t.level_db,
                 system_level_db: sys_level_tick.as_ref().and_then(|c| c.get()),
-                wpm_estimate: t.wpm_estimate,
+                wpm_estimate: t.wpm_estimate.map(f32::round),
             },
         );
         // системная дорожка оборвалась во время записи — сказать пользователю один раз

@@ -39,7 +39,7 @@ export default function Overlay() {
       <div className="ov-mid" data-tauri-drag-region>
         <LevelMeter db={tick?.level_db ?? rec?.level_db ?? null} />
         <TempoBar wpm={tick?.wpm_estimate ?? null} />
-        <span className="ov-wpm">{tick?.wpm_estimate != null ? `${tick.wpm_estimate} сл/мин` : rec ? "темп…" : "нет записи"}</span>
+        <span className="ov-wpm">{tick?.wpm_estimate != null ? `${Math.round(tick.wpm_estimate)} сл/мин` : rec ? "темп…" : "нет записи"}</span>
       </div>
       <button className="ov-stop" onClick={stop} disabled={!rec} title="Остановить запись">
         Стоп
