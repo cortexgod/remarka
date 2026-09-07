@@ -124,6 +124,12 @@ impl Launcher {
                 cmd.env("ANTHROPIC_API_KEY", key);
             }
         }
+        // claude CLI не из PATH: локальный бинарник или SSH-обёртка (слой смысла на VPS)
+        if let Some(p) = settings.llm_cli_path.as_deref().map(str::trim) {
+            if !p.is_empty() {
+                cmd.env("REMARKA_CLAUDE_CLI", p);
+            }
+        }
         #[cfg(target_os = "windows")]
         {
             use std::os::windows::process::CommandExt;

@@ -389,6 +389,7 @@ export interface Settings {
   llm_backend: LlmBackend;
   llm_model: string; // "claude-opus-5"
   anthropic_api_key: string | null;
+  llm_cli_path: string | null; // путь к claude или к SSH-обёртке (scripts/claude-ssh); null = искать claude в PATH
   language: string; // "ru"
   input_device: string | null;
   engine_python: string | null; // путь к python движка; null = автоопределение

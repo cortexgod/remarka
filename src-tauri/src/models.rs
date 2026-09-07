@@ -211,6 +211,8 @@ pub struct Settings {
     pub llm_backend: LlmBackend,
     pub llm_model: String,
     pub anthropic_api_key: Option<String>,
+    /// Путь к claude или к SSH-обёртке (scripts/claude-ssh): слой смысла на другой машине.
+    pub llm_cli_path: Option<String>,
     pub language: String,
     pub input_device: Option<String>,
     pub engine_python: Option<String>,
@@ -229,6 +231,7 @@ impl Default for Settings {
             llm_backend: LlmBackend::ClaudeCli,
             llm_model: "claude-opus-5".to_string(),
             anthropic_api_key: None,
+            llm_cli_path: None,
             language: "ru".to_string(),
             input_device: None,
             engine_python: None,

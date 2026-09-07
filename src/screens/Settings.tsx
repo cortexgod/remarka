@@ -159,6 +159,13 @@ export default function Settings() {
               <input className="input mono" value={settings.llm_model} onChange={(e) => set({ llm_model: e.target.value })} />
             </label>
           </div>
+          {settings.llm_backend === "claude_cli" && (
+            <label className="field">
+              <span className="label">Путь к claude</span>
+              <input className="input mono" value={settings.llm_cli_path ?? ""} onChange={(e) => set({ llm_cli_path: e.target.value.trim() || null })} placeholder="пусто — искать claude в PATH" />
+              <span className="hint">Можно указать SSH-обёртку scripts/claude-ssh из репозитория — тогда модель вызывается на твоём сервере, где Claude Code уже авторизован. С компьютера уходит только текст.</span>
+            </label>
+          )}
           {settings.llm_backend === "anthropic_api" && (
             <label className="field">
               <span className="label">Ключ API</span>

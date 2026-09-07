@@ -1,0 +1,11 @@
+#!/bin/bash
+# Обёртка «claude через SSH»: движок Ремарки вызывает её вместо локального claude,
+# и слой смысла считается на VPS, где Claude Code авторизован. Наружу уходит только текст.
+# Настройка: REMARKA_SSH_HOST (user@host), REMARKA_SSH_KEY (~/.ssh/id_ed25519).
+HOST="${REMARKA_SSH_HOST:-user@host}"
+KEY="${REMARKA_SSH_KEY:-$HOME/.ssh/id_ed25519}"
+# аргументы экранируем для удалённого bash (printf %q), stdin пробрасывается ssh как есть
+REMOTE="$(printf '%q ' /usr/local/bin/remarka-claude "$@")"
+exec ssh -i "$KEY" -o BatchMode=yes -o ConnectTimeout=20 -o ServerAliveInterval=30 \
+  -o ControlMaster=auto -o ControlPath="/tmp/remarka-ssh-%C" -o ControlPersist=120 \
+  "$HOST" "$REMOTE"
