@@ -1,0 +1,733 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ремарка</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600&family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+  :root{
+    --ground:#EDEEF0;
+    --surface:#F8F9FA;
+    --surface-2:#E3E5E9;
+    --ink:#14171C;
+    --ink-2:#575E6A;
+    --ink-3:#848C99;
+    --rule:#D2D6DC;
+    --rule-soft:#DEE1E6;
+    --signal:#B31D42;
+    --signal-ink:#A81B3E;
+    --signal-wash:rgba(179,29,66,.09);
+    --ok:#2C6E52;
+    --warn:#8E6415;
+    --shadow:0 1px 2px rgba(20,23,28,.06), 0 8px 24px -12px rgba(20,23,28,.18);
+
+    --f-display:"Unbounded","Golos Text",system-ui,sans-serif;
+    --f-body:"Golos Text",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --f-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+
+    --col:min(68ch,100%);
+    --pad:clamp(20px,4vw,56px);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ground:#101317;
+      --surface:#171B21;
+      --surface-2:#1F242C;
+      --ink:#E9EBEE;
+      --ink-2:#9BA3AF;
+      --ink-3:#6E7784;
+      --rule:#272D36;
+      --rule-soft:#20262E;
+      --signal:#F2506F;
+      --signal-ink:#FF7B95;
+      --signal-wash:rgba(242,80,111,.13);
+      --ok:#5FBE92;
+      --warn:#D4A24C;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -16px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#101317;
+    --surface:#171B21;
+    --surface-2:#1F242C;
+    --ink:#E9EBEE;
+    --ink-2:#9BA3AF;
+    --ink-3:#6E7784;
+    --rule:#272D36;
+    --rule-soft:#20262E;
+    --signal:#F2506F;
+    --signal-ink:#FF7B95;
+    --signal-wash:rgba(242,80,111,.13);
+    --ok:#5FBE92;
+    --warn:#D4A24C;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -16px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box}
+  img{max-width:100%}
+  body{
+    margin:0;
+    background:var(--ground);
+    color:var(--ink);
+    font-family:var(--f-body);
+    font-size:16.5px;
+    line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .wrap{
+    display:grid;
+    grid-template-columns:1fr;
+    max-width:1180px;
+    margin:0 auto;
+    padding:0 var(--pad) 96px;
+  }
+  @media (min-width:1060px){
+    .wrap{grid-template-columns:206px minmax(0,1fr);gap:56px;}
+  }
+
+  nav.rail{display:none}
+  @media (min-width:1060px){
+    nav.rail{
+      display:block;
+      position:sticky;
+      top:0;
+      align-self:start;
+      padding:124px 0 40px;
+      max-height:100vh;
+      overflow-y:auto;
+    }
+    nav.rail ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px}
+    nav.rail a{
+      display:grid;
+      grid-template-columns:22px 1fr;
+      gap:6px;
+      text-decoration:none;
+      border-bottom:0;
+      color:var(--ink-3);
+      font-size:12.5px;
+      line-height:1.35;
+      padding:6px 8px 6px 10px;
+      border-left:2px solid transparent;
+    }
+    nav.rail a:hover{color:var(--ink);border-left-color:var(--signal)}
+    nav.rail .n{font-family:var(--f-mono);font-size:10px;color:var(--ink-3);padding-top:2px}
+  }
+
+  main{min-width:0;padding-top:clamp(56px,8vw,104px)}
+
+  .eyebrow{
+    font-family:var(--f-mono);
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--signal-ink);
+    margin:0 0 20px;
+  }
+  h1{
+    font-family:var(--f-display);
+    font-weight:500;
+    font-size:clamp(40px,7vw,64px);
+    line-height:1.02;
+    letter-spacing:-.02em;
+    margin:0 0 18px;
+    text-wrap:balance;
+  }
+  .lede{
+    font-size:clamp(18px,2.4vw,21px);
+    line-height:1.5;
+    color:var(--ink-2);
+    max-width:52ch;
+    margin:0 0 36px;
+  }
+  .facts{
+    display:flex;
+    flex-wrap:wrap;
+    border-top:1px solid var(--rule);
+    border-bottom:1px solid var(--rule);
+    margin:0;
+  }
+  .facts div{
+    flex:1 1 148px;
+    padding:16px 20px 16px 0;
+    border-right:1px solid var(--rule-soft);
+  }
+  .facts div:last-child{border-right:0;padding-right:0}
+  .facts dt{
+    font-family:var(--f-mono);
+    font-size:10.5px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--ink-3);
+    margin:0 0 6px;
+  }
+  .facts dd{margin:0;font-size:15px;font-weight:500;line-height:1.35}
+
+  section{padding-top:clamp(48px,7vw,76px);scroll-margin-top:24px}
+  h2{
+    font-family:var(--f-display);
+    font-weight:500;
+    font-size:clamp(22px,3.1vw,29px);
+    line-height:1.16;
+    letter-spacing:-.015em;
+    margin:0;
+    text-wrap:balance;
+  }
+  h2 .num{
+    font-family:var(--f-mono);
+    font-size:11px;
+    font-weight:500;
+    letter-spacing:.1em;
+    color:var(--signal-ink);
+    display:block;
+    margin-bottom:12px;
+  }
+  h3{
+    font-family:var(--f-body);
+    font-weight:600;
+    font-size:16.5px;
+    margin:32px 0 8px;
+  }
+  p{margin:0 0 16px;max-width:var(--col)}
+  section > p:first-of-type{margin-top:16px}
+  strong{font-weight:600}
+  em{font-style:normal;color:var(--signal-ink);font-weight:500}
+  ul{max-width:var(--col);margin:0 0 16px;padding-left:0;list-style:none}
+  ul li{position:relative;padding-left:18px;margin-bottom:8px}
+  ul li::before{
+    content:"";
+    position:absolute;
+    left:1px;top:.72em;
+    width:6px;height:1px;
+    background:var(--ink-3);
+  }
+
+  .note{
+    max-width:var(--col);
+    border-left:2px solid var(--signal);
+    background:var(--signal-wash);
+    padding:14px 18px;
+    margin:4px 0 20px;
+    font-size:15px;
+    line-height:1.55;
+  }
+  .note p{margin:0;max-width:none}
+
+  .pipe{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin:22px 0 24px;
+  }
+  .pipe .step{
+    flex:1 1 150px;
+    background:var(--surface);
+    border:1px solid var(--rule);
+    border-top:2px solid var(--signal);
+    padding:12px 14px 14px;
+    min-width:0;
+  }
+  .pipe .step b{
+    display:block;
+    font-size:13.5px;
+    font-weight:600;
+    margin-bottom:4px;
+    line-height:1.25;
+  }
+  .pipe .step span.d{
+    font-family:var(--f-mono);
+    font-size:10.5px;
+    line-height:1.5;
+    color:var(--ink-2);
+    display:block;
+    overflow-wrap:anywhere;
+  }
+  .pipe .step .idx{
+    font-family:var(--f-mono);
+    font-size:10px;
+    color:var(--ink-3);
+    display:block;
+    margin-bottom:8px;
+    letter-spacing:.08em;
+  }
+
+  .tablewrap{overflow-x:auto;margin:20px 0 8px;border-bottom:1px solid var(--rule)}
+  table{border-collapse:collapse;width:100%;min-width:580px;font-size:14.5px}
+  thead th{
+    text-align:left;
+    font-family:var(--f-mono);
+    font-weight:500;
+    font-size:10.5px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--ink-3);
+    padding:0 14px 8px 0;
+    border-bottom:1px solid var(--rule);
+    white-space:nowrap;
+  }
+  tbody td{
+    padding:11px 14px 11px 0;
+    border-bottom:1px solid var(--rule-soft);
+    vertical-align:top;
+    line-height:1.45;
+  }
+  tbody tr:last-child td{border-bottom:0}
+  td.metric{font-weight:500;width:30%}
+  td.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--ink-2);font-size:12.5px;width:20%}
+  td.how{color:var(--ink-2);font-size:13.5px}
+
+  figure{margin:24px 0 12px;max-width:100%}
+  .mock{
+    background:var(--surface);
+    border:1px solid var(--rule);
+    box-shadow:var(--shadow);
+    padding:18px 18px 14px;
+    overflow-x:auto;
+  }
+  .mock-head{
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px 26px;
+    align-items:baseline;
+    border-bottom:1px solid var(--rule-soft);
+    padding-bottom:14px;
+    margin-bottom:16px;
+  }
+  .kpi{display:flex;flex-direction:column;gap:3px}
+  .kpi .v{
+    font-family:var(--f-display);
+    font-weight:500;
+    font-size:22px;
+    line-height:1;
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+  }
+  .kpi .v small{font-size:11px;font-weight:400;color:var(--ink-3);font-family:var(--f-mono)}
+  .kpi .k{
+    font-family:var(--f-mono);
+    font-size:9.5px;
+    letter-spacing:.09em;
+    text-transform:uppercase;
+    color:var(--ink-3);
+    white-space:nowrap;
+  }
+  .kpi.bad .v{color:var(--signal-ink)}
+  .kpi.good .v{color:var(--ok)}
+  figcaption{
+    font-size:12.5px;
+    color:var(--ink-3);
+    margin-top:10px;
+    line-height:1.55;
+    max-width:var(--col);
+  }
+  .legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px 18px;
+    margin-top:12px;
+    font-family:var(--f-mono);
+    font-size:10px;
+    letter-spacing:.06em;
+    color:var(--ink-3);
+    text-transform:uppercase;
+  }
+  .legend span{display:flex;align-items:center;gap:6px}
+  .swatch{width:9px;height:9px;display:inline-block;flex:none}
+
+  .weeks{display:flex;flex-direction:column;margin:22px 0 8px;border-top:1px solid var(--rule)}
+  .week{
+    display:grid;
+    grid-template-columns:80px minmax(0,1fr);
+    gap:0 20px;
+    padding:16px 0;
+    border-bottom:1px solid var(--rule-soft);
+  }
+  @media (max-width:560px){.week{grid-template-columns:1fr;gap:6px}}
+  .week .wk{
+    font-family:var(--f-mono);
+    font-size:11px;
+    letter-spacing:.05em;
+    color:var(--signal-ink);
+    padding-top:4px;
+    white-space:nowrap;
+  }
+  .week h4{margin:0 0 5px;font-size:15.5px;font-weight:600;line-height:1.3}
+  .week p{margin:0;font-size:14.5px;color:var(--ink-2);line-height:1.5;max-width:60ch}
+  .week .out{
+    display:inline-block;
+    margin-top:9px;
+    font-family:var(--f-mono);
+    font-size:10.5px;
+    letter-spacing:.04em;
+    color:var(--ink-3);
+    border:1px solid var(--rule);
+    padding:3px 8px;
+  }
+
+  .risk{
+    border-top:1px solid var(--rule);
+    padding:18px 0 4px;
+    max-width:var(--col);
+  }
+  .risk:last-of-type{border-bottom:1px solid var(--rule);padding-bottom:18px}
+  .risk .tag{
+    font-family:var(--f-mono);
+    font-size:10px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    padding:2px 7px;
+    border:1px solid currentColor;
+    margin-bottom:11px;
+    display:inline-block;
+  }
+  .risk.hi .tag{color:var(--signal-ink)}
+  .risk.mid .tag{color:var(--warn)}
+  .risk h4{margin:0 0 6px;font-size:16px;font-weight:600;line-height:1.3}
+  .risk p{margin:0 0 10px;font-size:15px;max-width:none}
+  .risk p:last-child{margin-bottom:0}
+
+  .sources{padding-top:52px;border-top:1px solid var(--rule);margin-top:68px}
+  .sources h2{font-size:15px;font-family:var(--f-body);font-weight:600;margin-bottom:12px;letter-spacing:0}
+  .sources ul li{font-size:13.5px;color:var(--ink-2);margin-bottom:6px}
+  a{color:var(--signal-ink);text-decoration:none;border-bottom:1px solid currentColor}
+  a:hover{color:var(--ink)}
+  a:focus-visible{outline:2px solid var(--signal);outline-offset:3px}
+
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<nav class="rail" aria-label="Разделы">
+  <ol>
+    <li><a href="#idea"><span class="n">01</span><span>Что это</span></a></li>
+    <li><a href="#why"><span class="n">02</span><span>Почему десктоп</span></a></li>
+    <li><a href="#arch"><span class="n">03</span><span>Архитектура</span></a></li>
+    <li><a href="#metrics"><span class="n">04</span><span>Три слоя метрик</span></a></li>
+    <li><a href="#llm"><span class="n">05</span><span>Слой помощника</span></a></li>
+    <li><a href="#screens"><span class="n">06</span><span>Экраны</span></a></li>
+    <li><a href="#report"><span class="n">07</span><span>Главный экран</span></a></li>
+    <li><a href="#calib"><span class="n">08</span><span>Калибровка</span></a></li>
+    <li><a href="#roadmap"><span class="n">09</span><span>План по неделям</span></a></li>
+    <li><a href="#risks"><span class="n">10</span><span>Подводные камни</span></a></li>
+    <li><a href="#money"><span class="n">11</span><span>Деньги и дальше</span></a></li>
+  </ol>
+</nav>
+
+<main>
+
+  <p class="eyebrow">Продуктовый план · сентябрь 2026</p>
+  <h1>Ремарка</h1>
+  <p class="lede">Десктопное приложение, которое сидит рядом с Zoom, слушает, как ты говоришь на созвоне, и после встречи объясняет, что с этим делать.</p>
+
+  <dl class="facts">
+    <div><dt>Платформа</dt><dd>Tauri · macOS + Windows</dd></div>
+    <div><dt>Режим</dt><dd>Разбор после записи</dd></div>
+    <div><dt>Язык</dt><dd>Русский, первым</dd></div>
+    <div><dt>До демо</dt><dd>8 недель соло</dd></div>
+  </dl>
+
+  <section id="idea">
+    <h2><span class="num">01</span>Что это и почему сейчас</h2>
+    <p>Ты закончил питч в Zoom. Через две минуты приходит уведомление: разбор готов. Открываешь — таймлайн встречи, где видно, что первые полторы минуты ты частил на ста пятидесяти пяти словах в минуту, потом выровнялся; двадцать три заполненные паузы, восемнадцать из них в ответах на вопросы; на четырнадцатой минуте инвестор спросил про юнит-экономику, а ты ответил про размер рынка.</p>
+    <p>Ниже — три конкретные правки с цитатами и таймкодами, и рядом график: как это выглядело на прошлых четырёх встречах.</p>
+    <p>Рынок здесь устроен странно. Есть тяжёлый B2B для отделов продаж вроде Gong. Есть веб-тренажёры для репетиций — Yoodli, Orai, Speakio, — но они разбирают монолог в браузере, а не реальную встречу. А <strong>Poised, единственный продукт, который жил прямо в живых звонках на десктопе, закрывается 8 октября 2026 года</strong>. Ниша освобождается буквально в этом месяце.</p>
+    <p>И отдельно: русскоязычного продукта в этой категории нет вообще ни одного.</p>
+    <div class="note">
+      <p><strong>Отличие в одну фразу.</strong> Приложение само понимает, что это была за встреча — питч инвестору, демо клиенту, стендап команды, лекция — и меняет рубрику разбора под неё. Один и тот же темп речи хорош для демо и плох для лекции; продукт, который этого не различает, выдаёт советы, с которыми нечего делать.</p>
+    </div>
+  </section>
+
+  <section id="why">
+    <h2><span class="num">02</span>Почему десктоп, а не веб</h2>
+    <p>Причина ровно одна, и она техническая. Десктоп позволяет писать <em>две отдельные аудиодорожки</em>: твой микрофон и системный звук, который идёт в наушники. Браузер так не умеет.</p>
+    <p>Две дорожки бесплатно решают три задачи, на которые в вебе уходят месяцы:</p>
+    <ul>
+      <li><strong>Диаризация не нужна.</strong> Микрофон — это всегда ты, системный звук — всегда остальные. Не нужны модели разделения дикторов и их ошибки.</li>
+      <li><strong>Доля своей речи считается точно.</strong> Это просто отношение длительностей речи на двух дорожках. Одна из самых полезных метрик и в переговорах, и в интервью.</li>
+      <li><strong>Перебивания детектируются геометрически.</strong> Пересечение речевых сегментов на обеих дорожках, ничего умного не требуется.</li>
+    </ul>
+    <p>Плюс приватность как позиционирование, а не как оправдание: аудио не покидает машину, транскрипция локальная. Наружу уходит максимум текст, и то по явному согласию.</p>
+  </section>
+
+  <section id="arch">
+    <h2><span class="num">03</span>Архитектура и пайплайн</h2>
+    <p>Оболочка на Tauri — это Rust плюс обычный веб-фронтенд, приложение весит единицы мегабайт вместо сотни у Electron. Рядом лежит локальный Python-сайдкар, который делает всю тяжёлую обработку. Хранилище — SQLite, потому что данных мало и они личные.</p>
+
+    <div class="pipe">
+      <div class="step"><span class="idx">01</span><b>Захват</b><span class="d">Core Audio Taps (macOS 14.4+) · WASAPI loopback (Win)</span></div>
+      <div class="step"><span class="idx">02</span><b>Две дорожки</b><span class="d">WAV 16 кГц моно · микрофон + система</span></div>
+      <div class="step"><span class="idx">03</span><b>VAD</b><span class="d">Silero · границы речи и пауз</span></div>
+      <div class="step"><span class="idx">04</span><b>Распознавание</b><span class="d">CrisperWhisper / faster-whisper large-v3</span></div>
+      <div class="step"><span class="idx">05</span><b>Выравнивание</b><span class="d">таймкоды по каждому слову</span></div>
+      <div class="step"><span class="idx">06</span><b>Просодия</b><span class="d">Parselmouth (Praat) · тон, интенсивность</span></div>
+      <div class="step"><span class="idx">07</span><b>Метрики</b><span class="d">детерминированный JSON, без ИИ</span></div>
+      <div class="step"><span class="idx">08</span><b>Слой смысла</b><span class="d">языковая модель по тексту и числам</span></div>
+    </div>
+
+    <p>Порядок здесь принципиален. Сначала считаются <strong>детерминированные метрики</strong> — их можно проверить, воспроизвести и показать формулой. И только потом языковая модель получает уже посчитанные числа вместе с текстом и интерпретирует их. Модель не измеряет, модель объясняет.</p>
+    <p>Это же снимает главную претензию к таким продуктам: «откуда ты взял, что я говорю монотонно». Из диапазона основного тона в полутонах — вот график, вот отрезок записи, послушай сам.</p>
+
+    <h3>Что где крутится</h3>
+    <ul>
+      <li><strong>Локально:</strong> захват, VAD, распознавание, просодия, все метрики первого и второго слоя. Тридцатиминутная встреча должна обрабатываться за две-три минуты на обычном ноутбуке.</li>
+      <li><strong>В облаке:</strong> только слой смысла, и только текстом. Аудио не уходит никогда.</li>
+      <li><strong>Опция для параноиков:</strong> локальная языковая модель. Качество хуже, зато машина полностью изолирована — для корпоративных продаж это будет главный аргумент.</li>
+    </ul>
+  </section>
+
+  <section id="metrics">
+    <h2><span class="num">04</span>Три слоя метрик</h2>
+    <p>Ошибка большинства таких приложений — свалить всё в один список из тридцати чисел. Слои нужны, потому что у них разная природа: первый считается арифметикой по тексту, второй — обработкой сигнала, третий вообще не число.</p>
+
+    <h3>Слой 1 · из транскрипта с таймкодами</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Метрика</th><th>Ориентир</th><th>Как считается</th></tr></thead>
+        <tbody>
+          <tr><td class="metric">Темп речи</td><td class="num">100–130 сл/мин</td><td class="how">Скользящее окно 15 секунд — даёт график, а не одно бесполезное среднее</td></tr>
+          <tr><td class="metric">Артикуляционный темп</td><td class="num">без пауз</td><td class="how">Отделяет «тараторит» от «не делает пауз». Это разные диагнозы и разные упражнения</td></tr>
+          <tr><td class="metric">Заполненные паузы</td><td class="num">&lt; 3 в минуту</td><td class="how">«э», «мм», «а-а». Главная и самая хрупкая метрика — см. риск 01</td></tr>
+          <tr><td class="metric">Слова-костыли</td><td class="num">словарь</td><td class="how">«как бы», «типа», «на самом деле», «вот», «собственно», «скажем так»</td></tr>
+          <tr><td class="metric">Структурные паузы</td><td class="num">3–6 в минуту</td><td class="how">Дольше 0,8 с на границе мысли. Их должно быть много — это признак хорошей речи</td></tr>
+          <tr><td class="metric">Хезитационные паузы</td><td class="num">0,3–0,8 с</td><td class="how">Внутри синтагмы, там где паузы быть не должно. Вот это плохо</td></tr>
+          <tr><td class="metric">Доля своей речи</td><td class="num">зависит от типа</td><td class="how">Питч 70–80 %, продажи 40–45 %, интервью около 60 %</td></tr>
+          <tr><td class="metric">Длина предложения</td><td class="num">&lt; 22 слов</td><td class="how">Длиннее — слушатель теряет начало фразы раньше, чем доходит до её конца</td></tr>
+          <tr><td class="metric">Лексическое разнообразие</td><td class="num">MTLD</td><td class="how">Не TTR: тот зависит от длины текста и врёт при сравнении разных встреч</td></tr>
+          <tr><td class="metric">Перебивания</td><td class="num">счётчик</td><td class="how">Пересечение речевых сегментов на двух дорожках</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Слой 2 · из сигнала</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Метрика</th><th>Ориентир</th><th>Что означает</th></tr></thead>
+        <tbody>
+          <tr><td class="metric">Диапазон тона</td><td class="num">&gt; 4 полутонов</td><td class="how">Разброс основного тона. Меньше — монотонность, самая частая претензия слушателей</td></tr>
+          <tr><td class="metric">Затухание к концу фразы</td><td class="num">&lt; 6 дБ</td><td class="how">«Съедание» окончаний. Люди этого за собой не слышат никогда</td></tr>
+          <tr><td class="metric">Восходящий тон в утверждениях</td><td class="num">доля фраз</td><td class="how">Утверждение звучит как вопрос — считывается собеседником как неуверенность</td></tr>
+          <tr><td class="metric">Джиттер и шиммер</td><td class="num">относительно себя</td><td class="how">Микронестабильность голоса. Косвенный признак волнения, полезен на графике старта</td></tr>
+          <tr><td class="metric">Профиль громкости</td><td class="num">дБ по времени</td><td class="how">Видно, как человек «сдувается» ко второй половине выступления</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Слой 3 · смысл</h3>
+    <p>Здесь метрик нет, здесь суждения. Языковая модель получает транскрипт с таймкодами, посчитанные числа и тип встречи, и отвечает на то, на что арифметика ответить не может: держалась ли структура, ответил ли ты на заданный вопрос или ушёл в сторону, где употреблён жаргон без расшифровки, какие три вещи стоит поправить в первую очередь.</p>
+  </section>
+
+  <section id="llm">
+    <h2><span class="num">05</span>Что превращает отчёт в помощника</h2>
+    <p>Отчёт после встречи — это ещё не продукт, это функция. Помощником приложение становится, когда присутствует во всём цикле.</p>
+
+    <h3>До встречи</h3>
+    <p>Вставляешь тему или повестку — приложение даёт чеклист под тип встречи и три вопроса, к которым стоит подготовиться, потому что их зададут. Для питча это юнит-экономика, для демо — сравнение с конкурентом, для интервью — дыра в резюме.</p>
+
+    <h3>Во время</h3>
+    <p>Ничего, кроме одной тонкой полоски темпа в углу экрана. Всё остальное отвлекает и ухудшает ровно то, что мы пытаемся улучшить.</p>
+
+    <h3>После</h3>
+    <p>Разбор, конспект встречи и список договорённостей. Конспект здесь не побочная фича, а причина открыть приложение в те дни, когда о собственной речи думать не хочется.</p>
+
+    <h3>Между встречами</h3>
+    <p>Вот тут и живёт слово «помощник». Приложение помнит твои паттерны и говорит вещи, которые может сказать только тот, кто видел все твои встречи: «третий созвон подряд ты частишь в первые две минуты, дальше выравниваешься — это волнение на старте, а не темп речи». Дальше идёт недельная сводка и упражнения, собранные под конкретно твою слабую сторону, а не общий курс ораторского мастерства.</p>
+    <div class="note">
+      <p>Такой памяти нет ни у одного веб-тренажёра, потому что туда заходят раз в месяц перед выступлением. У десктопа рядом с Zoom данные копятся сами, каждый рабочий день.</p>
+    </div>
+  </section>
+
+  <section id="screens">
+    <h2><span class="num">06</span>Экраны</h2>
+    <ul>
+      <li><strong>Иконка в трее.</strong> Основной вход. Zoom запустился — предложить запись. Одна кнопка, никакого окна.</li>
+      <li><strong>Оверлей записи.</strong> Таймер, индикатор уровня, полоска темпа. Максимально незаметный.</li>
+      <li><strong>Лента встреч.</strong> Карточки: дата, длительность, распознанный тип встречи, оценка, разница с прошлым разом.</li>
+      <li><strong>Разбор.</strong> Главный экран продукта, разобран ниже.</li>
+      <li><strong>Прогресс.</strong> Метрики во времени, серии, сравнение месяцев.</li>
+      <li><strong>Тренировка.</strong> Режим без Zoom: задание, запись, разбор. «Расскажи о своём проекте за 60 секунд, ни одной заполненной паузы».</li>
+    </ul>
+  </section>
+
+  <section id="report">
+    <h2><span class="num">07</span>Главный экран</h2>
+    <p>Всё, что делает приложение, должно считываться за три секунды после открытия. Сверху крупные числа, под ними таймлайн всей встречи, дальше транскрипт с подсветкой, в конце три правки.</p>
+
+    <figure>
+      <div class="mock" role="img" aria-label="Макет экрана разбора: темп 148 слов в минуту, 23 заполненные паузы, доля своей речи 78 процентов, диапазон тона 3,1 полутона, длительность 32 минуты, тип встречи — питч инвестору. Ниже таймлайн темпа речи с отметками пауз и реплик собеседника.">
+        <div class="mock-head">
+          <div class="kpi bad"><span class="v">148<small> сл/мин</small></span><span class="k">темп</span></div>
+          <div class="kpi bad"><span class="v">23</span><span class="k">заполненных пауз</span></div>
+          <div class="kpi good"><span class="v">78<small> %</small></span><span class="k">доля своей речи</span></div>
+          <div class="kpi bad"><span class="v">3,1<small> пт</small></span><span class="k">диапазон тона</span></div>
+          <div class="kpi"><span class="v">32:10</span><span class="k">питч инвестору</span></div>
+        </div>
+
+        <svg viewBox="0 0 720 134" width="100%" style="display:block;min-width:520px" aria-hidden="true">
+          <line x1="0" y1="78" x2="720" y2="78" stroke="var(--rule)" stroke-width="1"/>
+          <line x1="0" y1="40" x2="720" y2="40" stroke="var(--rule-soft)" stroke-width="1" stroke-dasharray="2 4"/>
+          <text x="2" y="35" fill="var(--ink-3)" font-family="JetBrains Mono, monospace" font-size="8.5">160</text>
+          <text x="2" y="74" fill="var(--ink-3)" font-family="JetBrains Mono, monospace" font-size="8.5">100</text>
+
+          <path d="M0,78 L0,30 L40,26 L80,33 L120,52 L160,60 L200,57 L240,63 L280,55 L320,48 L360,66 L400,61 L440,44 L480,35 L520,41 L560,58 L600,64 L640,50 L680,38 L720,44 L720,78 Z" fill="var(--signal-wash)"/>
+          <path d="M0,30 L40,26 L80,33 L120,52 L160,60 L200,57 L240,63 L280,55 L320,48 L360,66 L400,61 L440,44 L480,35 L520,41 L560,58 L600,64 L640,50 L680,38 L720,44" fill="none" stroke="var(--signal)" stroke-width="1.6" stroke-linejoin="round"/>
+
+          <g fill="var(--ink-3)">
+            <rect x="18" y="84" width="2" height="9"/><rect x="46" y="84" width="2" height="9"/>
+            <rect x="62" y="84" width="2" height="9"/><rect x="140" y="84" width="2" height="9"/>
+            <rect x="212" y="84" width="2" height="9"/><rect x="248" y="84" width="2" height="9"/>
+            <rect x="356" y="84" width="2" height="9"/><rect x="372" y="84" width="2" height="9"/>
+            <rect x="388" y="84" width="2" height="9"/><rect x="404" y="84" width="2" height="9"/>
+            <rect x="418" y="84" width="2" height="9"/><rect x="452" y="84" width="2" height="9"/>
+            <rect x="566" y="84" width="2" height="9"/><rect x="588" y="84" width="2" height="9"/>
+            <rect x="604" y="84" width="2" height="9"/><rect x="619" y="84" width="2" height="9"/>
+            <rect x="634" y="84" width="2" height="9"/><rect x="662" y="84" width="2" height="9"/>
+          </g>
+
+          <g fill="var(--signal)">
+            <rect x="322" y="98" width="26" height="5"/>
+            <rect x="446" y="98" width="18" height="5"/>
+            <rect x="556" y="98" width="34" height="5"/>
+            <rect x="648" y="98" width="14" height="5"/>
+          </g>
+
+          <line x1="0" y1="113" x2="720" y2="113" stroke="var(--rule)" stroke-width="1"/>
+          <g fill="var(--ink-3)" font-family="JetBrains Mono, monospace" font-size="8.5">
+            <text x="0" y="127">00:00</text>
+            <text x="170" y="127">08:00</text>
+            <text x="350" y="127">16:00</text>
+            <text x="530" y="127">24:00</text>
+            <text x="684" y="127">32:00</text>
+          </g>
+        </svg>
+
+        <div class="legend">
+          <span><i class="swatch" style="background:var(--signal)"></i>темп речи</span>
+          <span><i class="swatch" style="background:var(--ink-3)"></i>заполненная пауза</span>
+          <span><i class="swatch" style="background:var(--signal)"></i>говорит собеседник</span>
+        </div>
+      </div>
+      <figcaption>Макет на выдуманных данных. Видно то, чего человек про себя не знает: старт на ста пятидесяти пяти словах в минуту, провал в середине и плотная гроздь заполненных пауз сразу после первого вопроса инвестора на четырнадцатой минуте.</figcaption>
+    </figure>
+
+    <p>Таймлайн кликабельный: тыкаешь в любую точку — прыгаешь в это место записи и транскрипта. Это превращает отчёт из оценки в инструмент, потому что человек слышит себя ровно там, где число плохое.</p>
+    <p>Внизу блок «Три вещи». Не двадцать, а три, каждая с цитатой и таймкодом. Список из двадцати замечаний не выполняет никто.</p>
+  </section>
+
+  <section id="calib">
+    <h2><span class="num">08</span>Калибровка вместо норм</h2>
+    <p>Есть соблазн написать «твой темп 148, норма 120, ты говоришь плохо». Так делать нельзя по двум причинам. Почти вся литература по просодии сделана на английском, и переносить пороги на русский некорректно. И норма всё равно зависит от типа встречи, роли и человека.</p>
+    <p>Решение: первые три встречи — <strong>калибровка</strong>. Приложение молча собирает твой личный базовый уровень и дальше сравнивает тебя только с тобой. Коридоры из таблиц выше остаются, но как фон, а не как приговор.</p>
+    <p>Побочный эффект приятный: не нужен размеченный датасет и не нужно ни с кем спорить о правильном темпе речи.</p>
+  </section>
+
+  <section id="roadmap">
+    <h2><span class="num">09</span>План по неделям</h2>
+    <p>Принцип один: самое рискованное в начало. Захват звука либо заработает на первой неделе, либо не заработает никогда, и узнать об этом лучше сразу, а не после месяца работы над интерфейсом.</p>
+
+    <div class="weeks">
+      <div class="week"><span class="wk">Нед. 1–2</span><div>
+        <h4>Звук</h4>
+        <p>Оболочка на Tauri, кнопка старт и стоп, две дорожки в WAV. Core Audio Taps на macOS, WASAPI loopback на Windows, разрешения, иконка в трее. Проверка на живом созвоне, а не на тестовом файле.</p>
+        <span class="out">выход: две чистые дорожки с реальной встречи</span>
+      </div></div>
+
+      <div class="week"><span class="wk">Нед. 3</span><div>
+        <h4>Транскрипция</h4>
+        <p>Локальное распознавание на русском, точные таймкоды по словам, замер скорости. Здесь же решается вопрос заполненных пауз — до того, как на них будет построен интерфейс.</p>
+        <span class="out">выход: 30 минут аудио → текст за 3 минуты</span>
+      </div></div>
+
+      <div class="week"><span class="wk">Нед. 4</span><div>
+        <h4>Метрики первого слоя</h4>
+        <p>Темп, паузы всех типов, паразиты, длина фраз, доля своей речи, перебивания. Всё складывается в один JSON, который потом ест интерфейс. Никакого ИИ на этом шаге.</p>
+        <span class="out">выход: воспроизводимый отчёт в консоли</span>
+      </div></div>
+
+      <div class="week"><span class="wk">Нед. 5</span><div>
+        <h4>Просодия</h4>
+        <p>Parselmouth: основной тон, интенсивность, монотонность, затухание фраз. Самая приятная неделя — здесь появляются числа, которых нет ни у кого из веб-конкурентов.</p>
+        <span class="out">выход: второй слой в том же JSON</span>
+      </div></div>
+
+      <div class="week"><span class="wk">Нед. 6</span><div>
+        <h4>Экран разбора</h4>
+        <p>Таймлайн, синхронный транскрипт, крупные числа, переход по клику в аудио. Ключевая неделя для портфолио: до неё продукта не видно, после неё он выглядит законченным.</p>
+        <span class="out">выход: то, что показывают на демо</span>
+      </div></div>
+
+      <div class="week"><span class="wk">Нед. 7</span><div>
+        <h4>Слой смысла</h4>
+        <p>Определение типа встречи, проверка структуры, ответы на вопросы собеседника, три правки с цитатами. Промпты получают уже посчитанные метрики, а не сырой текст.</p>
+        <span class="out">выход: отчёт, который читают целиком</span>
+      </div></div>
+
+      <div class="week"><span class="wk">Нед. 8</span><div>
+        <h4>Прогресс и полировка</h4>
+        <p>Лента встреч, сравнение с прошлыми, недельная сводка. Запись демо-видео на тридцать секунд — на самом деле отдельная задача, и на неё нужен целый день.</p>
+        <span class="out">выход: рабочая сборка и демо</span>
+      </div></div>
+    </div>
+
+    <p>Дальше по убыванию ценности: тренировочный режим без Zoom, подготовка к встрече, командная версия с общим дашбордом, английский язык.</p>
+  </section>
+
+  <section id="risks">
+    <h2><span class="num">10</span>Подводные камни</h2>
+
+    <div class="risk hi">
+      <span class="tag">Риск 01 · критический</span>
+      <h4>Whisper выбрасывает ровно то, что мы измеряем</h4>
+      <p>Whisper обучен на чистых субтитрах и удаляет «э» и «мм» из транскрипта. Хуже того, делает это непредсказуемо: на коротких файлах вычищает, а на длинных в какой-то момент начинает их выписывать. Ещё хуже — иногда приклеивает филлер к следующему слову и портит его.</p>
+      <p>Строить главную метрику продукта на модели, которая эту метрику стирает, нельзя. Решение двойное: брать модель, обученную на дословную расшифровку с точными границами слов, и параллельно держать <strong>собственный детектор заполненных пауз</strong> — сегменты, где VAD видит речь, а распознавание не выдало слов, отфильтрованные по длительности и стабильности тона. Второй способ надёжнее первого и не зависит от версии модели.</p>
+    </div>
+
+    <div class="risk hi">
+      <span class="tag">Риск 02 · критический</span>
+      <h4>Захват системного звука на macOS</h4>
+      <p>Виртуальные драйверы вроде BlackHole больше не нужны, и хорошо: просить пользователя ставить драйвер — это минус половина установок. С macOS 13 есть ScreenCaptureKit, но он требует разрешения на запись экрана, а в системном диалоге это выглядит пугающе для приложения, которое экран не пишет.</p>
+      <p>Правильный путь — Core Audio Process Taps, доступные с macOS 14.4: они просят только разрешение на запись системного звука. Цена — отсечение старых версий системы, и оно того стоит. На Windows всё проще, WASAPI loopback работает из коробки.</p>
+    </div>
+
+    <div class="risk mid">
+      <span class="tag">Риск 03 · юридический</span>
+      <h4>Запись собеседников</h4>
+      <p>Записывать других участников созвона юридически скользко, в ряде юрисдикций нужно согласие всех сторон. Решение архитектурное: <strong>по умолчанию пишется только твой микрофон</strong>. Системный звук — отдельный переключатель с явным предупреждением, и продукт полностью работоспособен без него, просто без доли речи и перебиваний.</p>
+    </div>
+
+    <div class="risk mid">
+      <span class="tag">Риск 04 · содержательный</span>
+      <h4>Советы, с которыми нечего делать</h4>
+      <p>Самый вероятный способ убить продукт — выдавать верные, но бесполезные замечания вроде «говорите увереннее». Противоядие жёсткое: каждая рекомендация обязана содержать таймкод, цитату и то, что конкретно стоило сказать вместо. Если модель не может привести цитату — рекомендация не показывается вообще.</p>
+    </div>
+  </section>
+
+  <section id="money">
+    <h2><span class="num">11</span>Деньги и что дальше</h2>
+    <p>Три встречи в месяц бесплатно: этого хватает, чтобы понять ценность, и не хватает, чтобы жить на бесплатном тарифе. Дальше личная подписка. Отдельно командная версия — общий дашборд для руководителя отдела продаж, где видно, кто из менеджеров говорит восемьдесят процентов времени вместо сорока. Это метрика, за которую платят компании, а не люди.</p>
+    <p>Самый недооценённый ход на потом — <strong>подготовка к встрече</strong>. Разбор после факта продаётся тяжело, потому что человек и так подозревает, что выступил средне. А «вот три вопроса, которые тебе зададут через час» покупают мгновенно. Это тот же продукт, просто повёрнутый другой стороной.</p>
+    <p>Для портфолио хватит шестой недели. Тридцатисекундное видео, где закрывается Zoom и через две минуты открывается таймлайн с подсвеченными паузами, объясняет продукт лучше любого описания.</p>
+  </section>
+
+  <div class="sources">
+    <h2>Источники</h2>
+    <ul>
+      <li><a href="https://kendo.ai/blogs/yoodli-alternatives">Обзор альтернатив Yoodli, включая сообщение о закрытии Poised 8 октября 2026</a></li>
+      <li><a href="https://www.recall.ai/blog/how-to-get-access-to-system-audio">Recall.ai — доступ к системному звуку на macOS: ScreenCaptureKit и Core Audio Taps</a></li>
+      <li><a href="https://dgrlabs.co/blog/2026-04-25-capturing-system-audio-on-macos-in-2026.html">DGR Labs — захват системного звука на macOS в 2026</a></li>
+      <li><a href="https://github.com/SYSTRAN/faster-whisper/issues/901">faster-whisper — пропуск филлеров при транскрипции</a></li>
+      <li><a href="https://arxiv.org/pdf/2408.16589">CrisperWhisper — дословная расшифровка с точными таймкодами</a></li>
+      <li><a href="https://cs.hse.ru/cppr/best_projects/russian_speech_model_analysis">ВШЭ — анализ локальных моделей распознавания русской речи</a></li>
+    </ul>
+  </div>
+
+</main>
+</div>
+
+</body>
+</html>

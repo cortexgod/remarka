@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "definitions": {},
+  "description": "Файл baseline.json",
+  "properties": {
+    "created_at": {
+      "type": "string"
+    },
+    "meeting_ids": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "schema_version": {
+      "const": 1,
+      "type": "number"
+    },
+    "stats": {
+      "additionalProperties": {
+        "additionalProperties": false,
+        "properties": {
+          "mean": {
+            "type": "number"
+          },
+          "n": {
+            "type": "number"
+          },
+          "std": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "mean",
+          "std",
+          "n"
+        ],
+        "type": "object"
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema_version",
+    "created_at",
+    "meeting_ids",
+    "stats"
+  ],
+  "type": "object"
+}

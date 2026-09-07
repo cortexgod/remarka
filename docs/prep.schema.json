@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "definitions": {
+    "LlmBackend": {
+      "enum": [
+        "claude_cli",
+        "anthropic_api",
+        "none"
+      ],
+      "type": "string"
+    },
+    "MeetingType": {
+      "description": "Ремарка — общие контракты между движком (Python), оболочкой (Rust/Tauri) и интерфейсом (React).\n\nЭТО ИСТОЧНИК ИСТИНЫ ДЛЯ ФОРМ ДАННЫХ. Все JSON‑поля — snake_case. Rust зеркалит эти типы через serde (`#[serde(rename_all = \"snake_case\")]` для enum'ов, поля как есть), Python — через dataclass'ы/dict'ы и валидацию по docs/report.schema.json (генерируется из этого файла).\n\nВремя везде — секунды от начала записи (float), если не сказано иное. Даты — ISO‑8601 строки.",
+      "enum": [
+        "pitch",
+        "demo",
+        "sales",
+        "interview",
+        "standup",
+        "lecture",
+        "one_on_one",
+        "training",
+        "other"
+      ],
+      "type": "string"
+    }
+  },
+  "properties": {
+    "backend": {
+      "$ref": "#/definitions/LlmBackend"
+    },
+    "checklist": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "likely_questions": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "how_to_prepare": {
+            "type": "string"
+          },
+          "question": {
+            "type": "string"
+          },
+          "why": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "question",
+          "why",
+          "how_to_prepare"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "meeting_type": {
+      "$ref": "#/definitions/MeetingType"
+    },
+    "topic": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "topic",
+    "meeting_type",
+    "checklist",
+    "likely_questions",
+    "backend"
+  ],
+  "type": "object"
+}

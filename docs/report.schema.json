@@ -1,0 +1,1071 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "definitions": {
+    "Agreement": {
+      "additionalProperties": false,
+      "properties": {
+        "due": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "owner": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "text",
+        "owner",
+        "due"
+      ],
+      "type": "object"
+    },
+    "BaselineComparison": {
+      "additionalProperties": false,
+      "properties": {
+        "deltas": {
+          "items": {
+            "$ref": "#/definitions/BaselineDelta"
+          },
+          "type": "array"
+        },
+        "meetings_needed": {
+          "type": "number"
+        },
+        "meetings_used": {
+          "type": "number"
+        },
+        "status": {
+          "enum": [
+            "calibrating",
+            "ready"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "meetings_used",
+        "meetings_needed",
+        "deltas"
+      ],
+      "type": "object"
+    },
+    "BaselineDelta": {
+      "additionalProperties": false,
+      "properties": {
+        "baseline": {
+          "type": "number"
+        },
+        "delta": {
+          "type": "number"
+        },
+        "metric": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        },
+        "z": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "metric",
+        "baseline",
+        "value",
+        "delta",
+        "z"
+      ],
+      "type": "object"
+    },
+    "CrutchCount": {
+      "additionalProperties": false,
+      "properties": {
+        "count": {
+          "type": "number"
+        },
+        "word": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "word",
+        "count"
+      ],
+      "type": "object"
+    },
+    "EngineInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "asr_backend": {
+          "type": "string"
+        },
+        "asr_model": {
+          "type": "string"
+        },
+        "processing_sec": {
+          "type": "number"
+        },
+        "version": {
+          "type": "string"
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "version",
+        "asr_model",
+        "asr_backend",
+        "processing_sec",
+        "warnings"
+      ],
+      "type": "object"
+    },
+    "Layer1Metrics": {
+      "additionalProperties": false,
+      "properties": {
+        "articulation_wpm": {
+          "$ref": "#/definitions/MetricValue"
+        },
+        "crutch_top": {
+          "items": {
+            "$ref": "#/definitions/CrutchCount"
+          },
+          "type": "array"
+        },
+        "crutch_words_per_min": {
+          "$ref": "#/definitions/MetricValue"
+        },
+        "crutch_words_total": {
+          "$ref": "#/definitions/MetricValue"
+        },
+        "filled_pauses_per_min": {
+          "$ref": "#/definitions/MetricValue"
+        },
+        "filled_pauses_total": {
+          "$ref": "#/definitions/MetricValue"
+        },
+        "hesitation_pauses_per_min": {
+          "$ref": "#/definitions/MetricValue"
+        },
+        "interruptions_by_me": {
+          "$ref": "#/definitions/MetricValue"
+        },
+        "interruptions_by_other": {
+          "$ref": "#/definitions/MetricValue"
+        },
+        "long_sentences_share": {
+          "$ref": "#/definitions/MetricValue"
+        },
+        "mean_sentence_len": {
+          "$ref": "#/definitions/MetricValue"
+        },
+        "mtld": {
+          "$ref": "#/definitions/MetricValue"
+        },
+        "my_speech_sec": {
+          "$ref": "#/definitions/MetricValue"
+        },
+        "other_speech_sec": {
+          "$ref": "#/definitions/MetricValue"
+        },
+        "structural_pauses_per_min": {
+          "$ref": "#/definitions/MetricValue"
+        },
+        "talk_ratio": {
+          "$ref": "#/definitions/MetricValue"
+        },
+        "words_total": {
+          "$ref": "#/definitions/MetricValue"
+        },
+        "wpm": {
+          "$ref": "#/definitions/MetricValue"
+        }
+      },
+      "required": [
+        "wpm",
+        "articulation_wpm",
+        "filled_pauses_total",
+        "filled_pauses_per_min",
+        "crutch_words_total",
+        "crutch_words_per_min",
+        "crutch_top",
+        "structural_pauses_per_min",
+        "hesitation_pauses_per_min",
+        "talk_ratio",
+        "mean_sentence_len",
+        "long_sentences_share",
+        "mtld",
+        "interruptions_by_me",
+        "interruptions_by_other",
+        "my_speech_sec",
+        "other_speech_sec",
+        "words_total"
+      ],
+      "type": "object"
+    },
+    "Layer2Metrics": {
+      "additionalProperties": false,
+      "properties": {
+        "jitter_pct": {
+          "$ref": "#/definitions/MetricValue"
+        },
+        "loudness_drift_db": {
+          "$ref": "#/definitions/MetricValue"
+        },
+        "loudness_mean_db": {
+          "$ref": "#/definitions/MetricValue"
+        },
+        "phrase_final_decay_db": {
+          "$ref": "#/definitions/MetricValue"
+        },
+        "pitch_median_hz": {
+          "$ref": "#/definitions/MetricValue"
+        },
+        "pitch_range_st": {
+          "$ref": "#/definitions/MetricValue"
+        },
+        "rising_statements_share": {
+          "$ref": "#/definitions/MetricValue"
+        },
+        "shimmer_pct": {
+          "$ref": "#/definitions/MetricValue"
+        },
+        "start_jitter_ratio": {
+          "$ref": "#/definitions/MetricValue"
+        }
+      },
+      "required": [
+        "pitch_median_hz",
+        "pitch_range_st",
+        "phrase_final_decay_db",
+        "rising_statements_share",
+        "jitter_pct",
+        "shimmer_pct",
+        "start_jitter_ratio",
+        "loudness_drift_db",
+        "loudness_mean_db"
+      ],
+      "type": "object"
+    },
+    "LlmBackend": {
+      "enum": [
+        "claude_cli",
+        "anthropic_api",
+        "none"
+      ],
+      "type": "string"
+    },
+    "Meaning": {
+      "additionalProperties": false,
+      "properties": {
+        "agreements": {
+          "items": {
+            "$ref": "#/definitions/Agreement"
+          },
+          "type": "array"
+        },
+        "backend": {
+          "$ref": "#/definitions/LlmBackend"
+        },
+        "dropped_things": {
+          "type": "number"
+        },
+        "jargon": {
+          "items": {
+            "$ref": "#/definitions/MeaningJargon"
+          },
+          "type": "array"
+        },
+        "meeting_type": {
+          "additionalProperties": false,
+          "properties": {
+            "confidence": {
+              "type": "number"
+            },
+            "reason": {
+              "type": "string"
+            },
+            "type": {
+              "$ref": "#/definitions/MeetingType"
+            }
+          },
+          "required": [
+            "type",
+            "confidence",
+            "reason"
+          ],
+          "type": "object"
+        },
+        "model": {
+          "type": "string"
+        },
+        "questions": {
+          "items": {
+            "$ref": "#/definitions/MeaningQuestion"
+          },
+          "type": "array"
+        },
+        "structure": {
+          "additionalProperties": false,
+          "properties": {
+            "comment": {
+              "type": "string"
+            },
+            "kept": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kept",
+            "comment"
+          ],
+          "type": "object"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "three_things": {
+          "items": {
+            "$ref": "#/definitions/ThreeThing"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "backend",
+        "model",
+        "meeting_type",
+        "structure",
+        "questions",
+        "jargon",
+        "three_things",
+        "dropped_things",
+        "summary",
+        "agreements"
+      ],
+      "type": "object"
+    },
+    "MeaningJargon": {
+      "additionalProperties": false,
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "t": {
+          "type": "number"
+        },
+        "term": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "t",
+        "term",
+        "comment"
+      ],
+      "type": "object"
+    },
+    "MeaningQuestion": {
+      "additionalProperties": false,
+      "properties": {
+        "answered": {
+          "enum": [
+            "on_topic",
+            "partial",
+            "off_topic",
+            "not_answered"
+          ],
+          "type": "string"
+        },
+        "asked": {
+          "type": "string"
+        },
+        "comment": {
+          "type": "string"
+        },
+        "t": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "t",
+        "asked",
+        "answered",
+        "comment"
+      ],
+      "type": "object"
+    },
+    "MeetingType": {
+      "description": "Ремарка — общие контракты между движком (Python), оболочкой (Rust/Tauri) и интерфейсом (React).\n\nЭТО ИСТОЧНИК ИСТИНЫ ДЛЯ ФОРМ ДАННЫХ. Все JSON‑поля — snake_case. Rust зеркалит эти типы через serde (`#[serde(rename_all = \"snake_case\")]` для enum'ов, поля как есть), Python — через dataclass'ы/dict'ы и валидацию по docs/report.schema.json (генерируется из этого файла).\n\nВремя везде — секунды от начала записи (float), если не сказано иное. Даты — ISO‑8601 строки.",
+      "enum": [
+        "pitch",
+        "demo",
+        "sales",
+        "interview",
+        "standup",
+        "lecture",
+        "one_on_one",
+        "training",
+        "other"
+      ],
+      "type": "string"
+    },
+    "MetricValue": {
+      "additionalProperties": false,
+      "properties": {
+        "better": {
+          "enum": [
+            "inside",
+            "higher",
+            "lower"
+          ],
+          "type": "string"
+        },
+        "ref_high": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "ref_low": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "status": {
+          "enum": [
+            "good",
+            "warn",
+            "bad",
+            "na"
+          ],
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "value",
+        "unit",
+        "ref_low",
+        "ref_high",
+        "better",
+        "status"
+      ],
+      "type": "object"
+    },
+    "Metrics": {
+      "additionalProperties": false,
+      "properties": {
+        "layer1": {
+          "$ref": "#/definitions/Layer1Metrics"
+        },
+        "layer2": {
+          "$ref": "#/definitions/Layer2Metrics"
+        }
+      },
+      "required": [
+        "layer1",
+        "layer2"
+      ],
+      "type": "object"
+    },
+    "OtherUtterance": {
+      "additionalProperties": false,
+      "properties": {
+        "end": {
+          "type": "number"
+        },
+        "is_question": {
+          "type": "boolean"
+        },
+        "start": {
+          "type": "number"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "text",
+        "is_question"
+      ],
+      "type": "object"
+    },
+    "ReportMeeting": {
+      "additionalProperties": false,
+      "properties": {
+        "duration_sec": {
+          "type": "number"
+        },
+        "has_system_track": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        },
+        "started_at": {
+          "type": "string"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "training_task_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "$ref": "#/definitions/MeetingType"
+        },
+        "type_confidence": {
+          "type": "number"
+        },
+        "type_source": {
+          "enum": [
+            "llm",
+            "user",
+            "default"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "started_at",
+        "duration_sec",
+        "type",
+        "type_confidence",
+        "type_source",
+        "title",
+        "has_system_track",
+        "language",
+        "training_task_id"
+      ],
+      "type": "object"
+    },
+    "ReportSegments": {
+      "additionalProperties": false,
+      "properties": {
+        "mic_speech": {
+          "items": {
+            "$ref": "#/definitions/TimeSpan"
+          },
+          "type": "array"
+        },
+        "system_speech": {
+          "items": {
+            "$ref": "#/definitions/TimeSpan"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "mic_speech",
+        "system_speech"
+      ],
+      "type": "object"
+    },
+    "ReportTracks": {
+      "additionalProperties": false,
+      "properties": {
+        "mic": {
+          "$ref": "#/definitions/TrackInfo"
+        },
+        "system": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TrackInfo"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "mic",
+        "system"
+      ],
+      "type": "object"
+    },
+    "Score": {
+      "additionalProperties": false,
+      "properties": {
+        "basis": {
+          "enum": [
+            "reference",
+            "baseline"
+          ],
+          "type": "string"
+        },
+        "components": {
+          "items": {
+            "$ref": "#/definitions/ScoreComponent"
+          },
+          "type": "array"
+        },
+        "overall": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "overall",
+        "components",
+        "basis"
+      ],
+      "type": "object"
+    },
+    "ScoreComponent": {
+      "additionalProperties": false,
+      "properties": {
+        "metric": {
+          "type": "string"
+        },
+        "penalty": {
+          "type": "number"
+        },
+        "weight": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "metric",
+        "weight",
+        "penalty"
+      ],
+      "type": "object"
+    },
+    "Sentence": {
+      "additionalProperties": false,
+      "properties": {
+        "end": {
+          "type": "number"
+        },
+        "i": {
+          "type": "number"
+        },
+        "is_question": {
+          "type": "boolean"
+        },
+        "n_words": {
+          "type": "number"
+        },
+        "start": {
+          "type": "number"
+        },
+        "text": {
+          "type": "string"
+        },
+        "word_from": {
+          "type": "number"
+        },
+        "word_to": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "i",
+        "start",
+        "end",
+        "text",
+        "word_from",
+        "word_to",
+        "n_words",
+        "is_question"
+      ],
+      "type": "object"
+    },
+    "SpeechEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "end": {
+          "type": "number"
+        },
+        "kind": {
+          "$ref": "#/definitions/SpeechEventKind"
+        },
+        "label": {
+          "type": "string"
+        },
+        "sentence_i": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "source": {
+          "enum": [
+            "asr",
+            "detector",
+            "both",
+            "signal",
+            "llm"
+          ],
+          "type": "string"
+        },
+        "t": {
+          "type": "number"
+        },
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "word_i": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "t",
+        "end",
+        "kind",
+        "label",
+        "source",
+        "word_i",
+        "sentence_i",
+        "value"
+      ],
+      "type": "object"
+    },
+    "SpeechEventKind": {
+      "enum": [
+        "filled_pause",
+        "crutch",
+        "hesitation_pause",
+        "structural_pause",
+        "interruption_by_me",
+        "interruption_by_other",
+        "rising_statement",
+        "decay",
+        "fast_burst",
+        "question_from_other"
+      ],
+      "type": "string"
+    },
+    "ThreeThing": {
+      "additionalProperties": false,
+      "properties": {
+        "instead": {
+          "type": "string"
+        },
+        "metric": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "quote": {
+          "type": "string"
+        },
+        "t": {
+          "type": "number"
+        },
+        "title": {
+          "type": "string"
+        },
+        "why": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "why",
+        "quote",
+        "t",
+        "instead",
+        "metric"
+      ],
+      "type": "object"
+    },
+    "TimePoint": {
+      "additionalProperties": false,
+      "properties": {
+        "t": {
+          "type": "number"
+        },
+        "v": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "t",
+        "v"
+      ],
+      "type": "object"
+    },
+    "TimeSpan": {
+      "additionalProperties": false,
+      "properties": {
+        "end": {
+          "type": "number"
+        },
+        "start": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "type": "object"
+    },
+    "Timeline": {
+      "additionalProperties": false,
+      "properties": {
+        "articulation_wpm": {
+          "items": {
+            "$ref": "#/definitions/TimePoint"
+          },
+          "type": "array"
+        },
+        "loudness_db": {
+          "items": {
+            "$ref": "#/definitions/TimePoint"
+          },
+          "type": "array"
+        },
+        "other_speaking": {
+          "items": {
+            "$ref": "#/definitions/TimeSpan"
+          },
+          "type": "array"
+        },
+        "pitch_semitones": {
+          "items": {
+            "$ref": "#/definitions/TimePoint"
+          },
+          "type": "array"
+        },
+        "step_sec": {
+          "type": "number"
+        },
+        "window_sec": {
+          "type": "number"
+        },
+        "wpm": {
+          "items": {
+            "$ref": "#/definitions/TimePoint"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "window_sec",
+        "step_sec",
+        "wpm",
+        "articulation_wpm",
+        "pitch_semitones",
+        "loudness_db",
+        "other_speaking"
+      ],
+      "type": "object"
+    },
+    "TrackInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "duration_sec": {
+          "type": "number"
+        },
+        "path": {
+          "type": "string"
+        },
+        "sample_rate": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "path",
+        "sample_rate",
+        "duration_sec"
+      ],
+      "type": "object"
+    },
+    "Transcript": {
+      "additionalProperties": false,
+      "properties": {
+        "other": {
+          "items": {
+            "$ref": "#/definitions/OtherUtterance"
+          },
+          "type": "array"
+        },
+        "sentences": {
+          "items": {
+            "$ref": "#/definitions/Sentence"
+          },
+          "type": "array"
+        },
+        "words": {
+          "items": {
+            "$ref": "#/definitions/Word"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "words",
+        "sentences",
+        "other"
+      ],
+      "type": "object"
+    },
+    "Word": {
+      "additionalProperties": false,
+      "properties": {
+        "end": {
+          "type": "number"
+        },
+        "i": {
+          "type": "number"
+        },
+        "kind": {
+          "$ref": "#/definitions/WordKind"
+        },
+        "norm": {
+          "type": "string"
+        },
+        "prob": {
+          "type": "number"
+        },
+        "sentence_i": {
+          "type": "number"
+        },
+        "start": {
+          "type": "number"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "i",
+        "start",
+        "end",
+        "text",
+        "norm",
+        "prob",
+        "kind",
+        "sentence_i"
+      ],
+      "type": "object"
+    },
+    "WordKind": {
+      "enum": [
+        "word",
+        "filler",
+        "crutch"
+      ],
+      "type": "string"
+    }
+  },
+  "properties": {
+    "baseline": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/BaselineComparison"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "engine": {
+      "$ref": "#/definitions/EngineInfo"
+    },
+    "events": {
+      "items": {
+        "$ref": "#/definitions/SpeechEvent"
+      },
+      "type": "array"
+    },
+    "meaning": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Meaning"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "meeting": {
+      "$ref": "#/definitions/ReportMeeting"
+    },
+    "metrics": {
+      "$ref": "#/definitions/Metrics"
+    },
+    "schema_version": {
+      "const": 1,
+      "type": "number"
+    },
+    "score": {
+      "$ref": "#/definitions/Score"
+    },
+    "segments": {
+      "$ref": "#/definitions/ReportSegments"
+    },
+    "timeline": {
+      "$ref": "#/definitions/Timeline"
+    },
+    "tracks": {
+      "$ref": "#/definitions/ReportTracks"
+    },
+    "transcript": {
+      "$ref": "#/definitions/Transcript"
+    }
+  },
+  "required": [
+    "schema_version",
+    "meeting",
+    "tracks",
+    "segments",
+    "transcript",
+    "events",
+    "timeline",
+    "metrics",
+    "score",
+    "baseline",
+    "meaning",
+    "engine"
+  ],
+  "type": "object"
+}

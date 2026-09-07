@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "definitions": {
+    "Exercise": {
+      "additionalProperties": false,
+      "properties": {
+        "duration_min": {
+          "type": "number"
+        },
+        "instruction": {
+          "type": "string"
+        },
+        "targets_metric": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "training_task_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "title",
+        "instruction",
+        "duration_min",
+        "targets_metric",
+        "training_task_id"
+      ],
+      "type": "object"
+    },
+    "LlmBackend": {
+      "enum": [
+        "claude_cli",
+        "anthropic_api",
+        "none"
+      ],
+      "type": "string"
+    },
+    "PatternInsight": {
+      "additionalProperties": false,
+      "properties": {
+        "detail": {
+          "type": "string"
+        },
+        "meeting_ids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "metric": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "detail",
+        "metric",
+        "meeting_ids"
+      ],
+      "type": "object"
+    }
+  },
+  "properties": {
+    "backend": {
+      "$ref": "#/definitions/LlmBackend"
+    },
+    "exercises": {
+      "items": {
+        "$ref": "#/definitions/Exercise"
+      },
+      "type": "array"
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "insights": {
+      "items": {
+        "$ref": "#/definitions/PatternInsight"
+      },
+      "type": "array"
+    },
+    "meetings_used": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "schema_version": {
+      "const": 1,
+      "type": "number"
+    },
+    "weekly_summary": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "generated_at",
+    "meetings_used",
+    "insights",
+    "weekly_summary",
+    "exercises",
+    "backend"
+  ],
+  "type": "object"
+}
