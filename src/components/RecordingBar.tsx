@@ -17,15 +17,15 @@ export function RecordingBar({ onStop, onCancel, title }: Props) {
   return (
     <div className="recbar">
       <div className="recbar-main">
-        <span className="tag fill">rec</span>
+        <span className="dot rec" aria-hidden="true" />
         <span className="rec-time">{fmtTime(elapsed)}</span>
         <span className="muted">{title ?? "Идёт запись"}</span>
       </div>
       <div className="recbar-meters">
         <LevelMeter db={tick?.level_db ?? rec.level_db} label="микрофон" />
-        {rec.system_audio && <LevelMeter db={tick?.system_level_db ?? rec.system_level_db} label="система" />}
+        {rec.system_audio && <LevelMeter db={tick?.system_level_db ?? rec.system_level_db} label="собеседники" />}
         <div className="level">
-          <span className="label">темп {tick?.wpm_estimate != null ? `≈${Math.round(tick.wpm_estimate)} сл/мин` : "…"}</span>
+          <span className="label">темп {tick?.wpm_estimate != null ? `≈${Math.round(tick.wpm_estimate)} слов/мин` : "…"}</span>
           <TempoBar wpm={tick?.wpm_estimate ?? null} />
         </div>
       </div>

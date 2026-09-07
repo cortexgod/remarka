@@ -9,10 +9,52 @@ export function StatusTag({ status }: { status: MetricValue["status"] }) {
 
 export function TypeTag({ type, source }: { type: MeetingType; source?: "llm" | "user" | "default" }) {
   return (
-    <span className="tag" title={source === "llm" ? "Тип определён моделью" : source === "user" ? "Тип задан вручную" : "Тип по умолчанию"}>
+    <span className="tag" title={source === "llm" ? "Тип определён по разговору" : source === "user" ? "Тип выбран вручную" : "Тип не определён"}>
       {typeLabel(type)}
-      {source === "llm" ? " · по модели" : ""}
     </span>
+  );
+}
+
+/** Оттенок оценки: ≥75 — хорошо, ≥55 — на грани, ниже — стоит поправить */
+export function scoreTone(v: number | null | undefined): "good" | "warn" | "bad" | "na" {
+  if (v == null || !isFinite(v)) return "na";
+  return v >= 75 ? "good" : v >= 55 ? "warn" : "bad";
+}
+
+/** Кольцо оценки 0–100 с числом внутри */
+export function ScoreRing({ value, size = 52, stroke = 4.5, text, tone }: { value: number | null | undefined; size?: number; stroke?: number; text?: string; tone?: "good" | "warn" | "bad" | "na" }) {
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const v = value == null ? 0 : Math.max(0, Math.min(100, value));
+  return (
+    <div className={"ring " + (tone ?? scoreTone(value))} style={{ width: size, height: size }} aria-label={value == null ? "оценки нет" : `оценка ${value} из 100`}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--ring-track)" strokeWidth={stroke} />
+        {value != null && (
+          <circle
+            cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor" strokeWidth={stroke} strokeLinecap="round"
+            strokeDasharray={`${(c * v) / 100} ${c}`} transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          />
+        )}
+      </svg>
+      <span className="ring-v" style={{ fontSize: Math.round(size * 0.36) }}>{text ?? value ?? "—"}</span>
+    </div>
+  );
+}
+
+/** Иллюстрация пустого состояния: две реплики с волной голоса */
+export function EmptyArt() {
+  return (
+    <svg className="empty-art" width="164" height="92" viewBox="0 0 164 92" aria-hidden="true">
+      <path d="M22 14h60a12 12 0 0 1 12 12v14a12 12 0 0 1-12 12H40l-10 11V52a12 12 0 0 1-8-11.3V26a12 12 0 0 1 12-12z" fill="var(--bg-3)" />
+      <g stroke="var(--ink-3)" strokeWidth="3.5" strokeLinecap="round">
+        <path d="M36 30v6M48 25v16M60 28v10M72 26v14" />
+      </g>
+      <path d="M82 40h48a11 11 0 0 1 11 11v12a11 11 0 0 1-11 11H97l-9 9V74a11 11 0 0 1-8-10.6V51a11 11 0 0 1 11-11z" fill="var(--accent)" />
+      <g stroke="#fff" strokeWidth="3.5" strokeLinecap="round">
+        <path d="M95 54v6M106 48v18M117 52v10M128 55v4" />
+      </g>
+    </svg>
   );
 }
 

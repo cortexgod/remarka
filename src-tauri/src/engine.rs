@@ -275,26 +275,26 @@ impl RunOutcome {
     /// Человекочитаемая причина неудачи (русский), с хвостом лога.
     pub fn failure_message(&self, log_path: &Path) -> String {
         let base = if self.timed_out {
-            "Движок не ответил вовремя и был остановлен".to_string()
+            "Разбор шёл слишком долго и был остановлен. Попробуй ещё раз".to_string()
         } else if let Some(e) = &self.error {
             if e == "cancelled" {
-                "Анализ отменён".to_string()
+                "Разбор отменён".to_string()
             } else {
                 e.clone()
             }
         } else {
             match self.exit_code {
-                Some(0) => "Движок завершился без события done".to_string(),
-                Some(c) => format!("Движок завершился с кодом {c}"),
-                None => "Движок был прерван сигналом".to_string(),
+                Some(0) => "Разбор прервался, не дойдя до конца. Попробуй ещё раз".to_string(),
+                Some(c) => format!("Разбор прервался (код {c}). Попробуй ещё раз"),
+                None => "Разбор был прерван".to_string(),
             }
         };
+        // хвост лога — только в журнал: в карточке встречи человеку нужен понятный текст, а не стек
         let tail = tail_lines(log_path, 6);
-        if tail.trim().is_empty() {
-            base
-        } else {
-            format!("{base}\n— engine.log:\n{tail}")
+        if !tail.trim().is_empty() {
+            log::warn!("разбор не удался: {base}\n{tail}");
         }
+        base
     }
 }
 
@@ -559,7 +559,7 @@ fn run_analysis(app: &AppHandle, job: &AnalyzeJob, pid_slot: &Arc<Mutex<Option<u
     let id = row.id.clone();
     let launcher = find_launcher(&settings).ok_or_else(|| {
         anyhow!(
-            "Python движка не найден. Создайте engine/.venv (uv sync) или укажите путь к python в настройках"
+            "Модуль разбора не найден. Переустанови приложение"
         )
     })?;
     let mic = paths.mic_wav(&id);
@@ -706,7 +706,7 @@ pub fn rescore(app: &AppHandle, meeting_id: &str, meeting_type: MeetingType) -> 
     let state = app.state::<AppState>();
     let paths = state.paths.clone();
     let settings = state.settings();
-    let launcher = find_launcher(&settings).ok_or_else(|| anyhow!("Python движка не найден"))?;
+    let launcher = find_launcher(&settings).ok_or_else(|| anyhow!("Модуль разбора не найден. Переустанови приложение"))?;
     let report_path = paths.report_json(meeting_id);
     if !report_path.is_file() {
         anyhow::bail!("Отчёт ещё не построен");
@@ -821,7 +821,7 @@ pub fn maybe_build_baseline(app: &AppHandle) -> Result<bool> {
         return Ok(false);
     }
     let settings = state.settings();
-    let launcher = find_launcher(&settings).ok_or_else(|| anyhow!("Python движка не найден"))?;
+    let launcher = find_launcher(&settings).ok_or_else(|| anyhow!("Модуль разбора не найден. Переустанови приложение"))?;
     let mut cmd = launcher.command(&settings, &paths.data_dir);
     cmd.arg("baseline").arg("--reports");
     for r in &reports {
@@ -876,7 +876,7 @@ pub fn doctor(app: &AppHandle) -> EngineDoctor {
         return doctor_unavailable(
             None,
             vec![
-                "Python движка не найден. Создайте окружение engine/.venv (uv sync) или укажите путь к python в настройках."
+                "Модуль разбора не найден. Переустанови приложение."
                     .to_string(),
             ],
         );
@@ -932,7 +932,7 @@ pub fn prepare(app: &AppHandle, topic: &str, meeting_type: MeetingType) -> Resul
     let settings = state.settings();
     let paths = state.paths.clone();
     let launcher = find_launcher(&settings)
-        .ok_or_else(|| anyhow!("Python движка не найден — проверьте движок в настройках"))?;
+        .ok_or_else(|| anyhow!("Модуль разбора не найден. Переустанови приложение"))?;
     std::fs::create_dir_all(paths.prep_dir())?;
     let out = paths
         .prep_dir()
@@ -973,7 +973,7 @@ pub fn refresh_patterns(app: &AppHandle) -> Result<Value> {
     let settings = state.settings();
     let paths = state.paths.clone();
     let launcher = find_launcher(&settings)
-        .ok_or_else(|| anyhow!("Python движка не найден — проверьте движок в настройках"))?;
+        .ok_or_else(|| anyhow!("Модуль разбора не найден. Переустанови приложение"))?;
     let rows = lock(&state.db).ready_rows()?;
     let mut reports: Vec<PathBuf> = rows
         .iter()
@@ -1021,7 +1021,7 @@ pub fn download_model(app: &AppHandle, asr_model: &str) -> Result<()> {
     let settings = state.settings();
     let paths = state.paths.clone();
     let launcher = find_launcher(&settings)
-        .ok_or_else(|| anyhow!("Python движка не найден — проверьте движок в настройках"))?;
+        .ok_or_else(|| anyhow!("Модуль разбора не найден. Переустанови приложение"))?;
     let mut cmd = launcher.command(&settings, &paths.data_dir);
     cmd.args(["download-model", "--asr-model", asr_model]);
     let log_path = paths.engine_shared_log();

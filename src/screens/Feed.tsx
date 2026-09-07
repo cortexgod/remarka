@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { FirstRun } from "../components/FirstRun";
 import { Link } from "react-router-dom";
-import type { Baseline, StartRecordingOpts } from "../types/contracts";
+import type { Baseline, MeetingCard, StartRecordingOpts } from "../types/contracts";
 import { api } from "../lib/api";
 import { useStore } from "../lib/store";
-import { APP_LABELS, plural } from "../lib/format";
+import { APP_LABELS, dayLabel } from "../lib/format";
 import { MeetingCardView } from "../components/MeetingCardView";
 import { RecordDialog } from "../components/RecordDialog";
 import { RecordingBar } from "../components/RecordingBar";
 import { MeetingAppBanner } from "../components/MeetingAppBanner";
+import { EmptyArt } from "../components/Bits";
 
 export default function Feed() {
   const { meetings, meetingsLoaded, progress, appState, meetingApp, run, refreshMeetings, error } = useStore();
@@ -22,6 +23,16 @@ export default function Feed() {
   }, [readyKey]);
 
   const readyNonTraining = useMemo(() => meetings.filter((m) => m.status === "ready" && m.meeting_type !== "training").length, [meetings]);
+  const groups = useMemo(() => {
+    const out: { label: string; items: MeetingCard[] }[] = [];
+    for (const m of meetings) {
+      const label = dayLabel(m.started_at);
+      const last = out[out.length - 1];
+      if (last && last.label === label) last.items.push(m);
+      else out.push({ label, items: [m] });
+    }
+    return out;
+  }, [meetings]);
   const recording = appState?.recording;
   const recTitle = recording ? meetings.find((m) => m.id === recording.meeting_id)?.title : null;
 
@@ -38,23 +49,22 @@ export default function Feed() {
   };
   const analyze = (id: string) => run(api.analyzeMeeting(id, null));
   const del = async (id: string) => {
-    if (!confirm("Удалить встречу вместе с аудио и отчётом?")) return;
+    if (!confirm("Удалить встречу вместе с аудио и разбором?")) return;
     await run(api.deleteMeeting(id), "Встреча удалена");
     refreshMeetings();
   };
+  const openDialog = () => {
+    setPreset(undefined);
+    setDialog(true);
+  };
+  const done = Math.min(readyNonTraining, 3);
 
   return (
     <div className="page">
       <div className="page-head">
         <h1 className="title">Встречи</h1>
         {!recording && (
-          <button
-            className="btn signal"
-            onClick={() => {
-              setPreset(undefined);
-              setDialog(true);
-            }}
-          >
+          <button className="btn signal" onClick={openDialog}>
             <span className="rec-dot" /> Записать
           </button>
         )}
@@ -69,23 +79,19 @@ export default function Feed() {
         }}
       />
 
-      {baseline !== undefined && (
+      {baseline !== undefined && meetings.length > 0 && (
         <div className={"calib " + (baseline ? "ready" : "")}>
+          <div className="calib-steps" aria-hidden="true">
+            {[0, 1, 2].map((i) => <span key={i} className={baseline || i < done ? "on" : ""} />)}
+          </div>
           {baseline ? (
-            <>
-              <span className="tag ok">база готова</span>
-              <span>
-                Приложение уже знает твою обычную манеру: теперь оценка показывает, лучше или хуже обычного ты говорил.{" "}
-                <Link to="/progress">Прогресс</Link>
-              </span>
-            </>
+            <span>
+              <strong>Обычная манера известна.</strong> Оценка теперь показывает, лучше или хуже обычного ты говорил. <Link to="/progress">Прогресс</Link>
+            </span>
           ) : (
-            <>
-              <span className="tag">знакомство</span>
-              <span>
-                {Math.min(readyNonTraining, 3)} из 3 встреч. После третьей приложение узнает твою обычную манеру и будет сравнивать тебя с тобой, а не с таблицей.
-              </span>
-            </>
+            <span>
+              <strong>Знакомство: {done} из 3 встреч.</strong> После третьей приложение поймёт твою обычную манеру и будет сравнивать тебя с тобой, а не с таблицей.
+            </span>
           )}
         </div>
       )}
@@ -98,9 +104,13 @@ export default function Feed() {
 
       {meetingsLoaded && meetings.length === 0 && (
         <div className="empty">
-          <h3>Пока ни одной встречи</h3>
-          <p>Нажми «Записать» перед следующим созвоном или начни с тренировки — задание на 60 секунд.</p>
-          <div className="row" style={{ justifyContent: "center", marginTop: 12 }}>
+          <EmptyArt />
+          <h3>Здесь появятся твои встречи</h3>
+          <p>Нажми «Записать» перед следующим созвоном. Хочется попробовать прямо сейчас — есть тренировка на минуту.</p>
+          <div className="row" style={{ justifyContent: "center", marginTop: 16 }}>
+            <button className="btn signal" onClick={openDialog}>
+              <span className="rec-dot" /> Записать
+            </button>
             <Link to="/training" className="btn">
               Тренировка
             </Link>
@@ -108,20 +118,16 @@ export default function Feed() {
         </div>
       )}
 
-      {meetings.length > 0 && (
-        <>
-          <div className="section-head" style={{ marginTop: 4 }}>
-            <span className="aside">
-              {meetings.length} {plural(meetings.length, "запись", "записи", "записей")}
-            </span>
-          </div>
+      {groups.map((g) => (
+        <section key={g.label} className="day-group">
+          <div className="day-head">{g.label}</div>
           <div className="mlist">
-            {meetings.map((m) => (
+            {g.items.map((m) => (
               <MeetingCardView key={m.id} m={m} progress={progress[m.id]} onAnalyze={analyze} onDelete={del} />
             ))}
           </div>
-        </>
-      )}
+        </section>
+      ))}
 
       <RecordDialog open={dialog} onClose={() => setDialog(false)} onStart={start} presetTitle={preset} />
     </div>

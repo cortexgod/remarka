@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import type { Baseline, PatternsResult, ProgressData } from "../types/contracts";
 import { api } from "../lib/api";
 import { useStore } from "../lib/store";
-import { fmtDate, fmtNum, monthName, plural } from "../lib/format";
+import { fmtDate, fmtNum, monthName } from "../lib/format";
 import { METRIC_BY_KEY, PROGRESS_KEYS, fmtMetricValue, metricLabel } from "../lib/metrics";
 import { Markdown } from "../lib/markdown";
 import { LineChart } from "../components/LineChart";
@@ -25,7 +25,7 @@ export default function Progress() {
 
   const refresh = async () => {
     setBusy(true);
-    const p = await run(api.refreshPatterns(), "Инсайты обновлены");
+    const p = await run(api.refreshPatterns(), "Наблюдения обновлены");
     if (p) setPatterns(p);
     setBusy(false);
   };
@@ -44,7 +44,7 @@ export default function Progress() {
   return (
     <div className="page">
       <h1 className="title">Как меняется речь</h1>
-      <p className="lede">Метрики по встречам, серия, сравнение месяцев и то, что видно только по всем встречам сразу.</p>
+      
       {err && <div className="note"><p>{err}</p></div>}
       {data && (
         <dl className="facts" style={{ marginBottom: 28 }}>
@@ -53,12 +53,12 @@ export default function Progress() {
             <dd>{data.meetings_total}</dd>
           </div>
           <div>
-            <dt>Дней подряд</dt>
-            <dd>{data.streak_days} {plural(data.streak_days, "рабочий день", "рабочих дня", "рабочих дней")} подряд</dd>
+            <dt>Рабочих дней подряд</dt>
+            <dd>{data.streak_days}</dd>
           </div>
           <div>
-            <dt>Знакомство</dt>
-            <dd>{data.baseline?.status === "ready" ? "готова, сравниваем с тобой" : `калибровка ${data.baseline?.meetings_used ?? 0} из ${data.baseline?.meetings_needed ?? 3}`}</dd>
+            <dt>Сравнение</dt>
+            <dd>{data.baseline?.status === "ready" ? "с тобой обычным" : `с общими нормами · знакомство ${data.baseline?.meetings_used ?? 0} из ${data.baseline?.meetings_needed ?? 3}`}</dd>
           </div>
           <div>
             <dt>Оценка за {monthName(now).toLowerCase()}</dt>
@@ -83,7 +83,7 @@ export default function Progress() {
       {data && (
         <div className="section">
           <div className="section-head">
-            <h2 className="h">Метрики</h2>
+            <h2 className="h">Показатели</h2>
             <span className="aside">пунктир — как ты говоришь обычно</span>
           </div>
           <div className="charts">
@@ -115,10 +115,10 @@ export default function Progress() {
             <table className="t">
               <thead>
                 <tr>
-                  <th>Метрика</th>
+                  <th>Показатель</th>
                   <th className="num">{monthName(prev)}</th>
                   <th className="num">{monthName(now)}</th>
-                  <th className="num">Дельта</th>
+                  <th className="num">Разница</th>
                 </tr>
               </thead>
               <tbody>
@@ -143,10 +143,10 @@ export default function Progress() {
 
       <div className="section">
         <div className="section-head">
-          <h2 className="h"><span className="num">Между встречами</span>Что видно только по всем встречам сразу</h2>
+          <h2 className="h">Что видно только по всем встречам сразу</h2>
           <button className="btn small" onClick={refresh} disabled={busy}>{busy ? "Считаем…" : "Обновить"}</button>
         </div>
-        {!patterns && <p className="hint">Инсайты появятся после нескольких разобранных встреч. Нажми «Обновить».</p>}
+        {!patterns && <p className="hint">Наблюдения появятся после нескольких разобранных встреч. Нажми «Обновить».</p>}
         {patterns && (
           <>
             <div className="insights">
@@ -169,7 +169,7 @@ export default function Progress() {
                 <Markdown text={patterns.weekly_summary} className="weekly" />
               </div>
               <div>
-                <span className="label">Упражнения под слабую сторону</span>
+                <span className="label">Упражнения на слабое место</span>
                 <div className="exercises">
                   {patterns.exercises.map((ex, i) => (
                     <div className="exercise" key={i}>
@@ -180,7 +180,7 @@ export default function Progress() {
                       <p className="muted">{ex.instruction}</p>
                       <div className="row" style={{ gap: 8 }}>
                         {ex.targets_metric && <span className="tag">{metricLabel(ex.targets_metric)}</span>}
-                        {ex.training_task_id && <Link to={`/training?task=${ex.training_task_id}`} className="btn small">В тренажёр</Link>}
+                        {ex.training_task_id && <Link to={`/training?task=${ex.training_task_id}`} className="btn small">К тренировке</Link>}
                       </div>
                     </div>
                   ))}

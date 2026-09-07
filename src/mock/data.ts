@@ -89,7 +89,7 @@ export const MEETING_SPECS: MockMeetingSpec[] = [
     layer2: { pitch_median_hz: 118, pitch_range_st: 3.1, phrase_final_decay_db: 7.4, rising_statements_share: 0.17, jitter_pct: 1.21, shimmer_pct: 4.7, start_jitter_ratio: 1.38, loudness_drift_db: -3.4, loudness_mean_db: -24.6 } },
   { id: "a1b2c3d4-0008-4a00-8000-000000000008", seed: 108, type: "demo", type_source: "default", title: "Демо «Кухня на районе»", duration_sec: 1120, daysAgo: 0, hour: 11, minute: 10, minutesAgo: 190, status: "analyzing", has_system_track: true },
   { id: "a1b2c3d4-0009-4a00-8000-000000000009", seed: 109, type: "other", type_source: "default", title: null, duration_sec: 660, daysAgo: 0, hour: 12, minute: 40, minutesAgo: 95, status: "error", has_system_track: false,
-    error: "Движок завершился с ошибкой на стадии «распознавание»: модель large-v3-turbo не найдена в кэше и не скачалась (нет сети). Проверьте движок в настройках или скачайте модель заранее." },
+    error: "Не удалось распознать речь: модель распознавания ещё не скачана, а интернета не было. Скачай модель на экране «Встречи» и нажми «Повторить»." },
   { id: "a1b2c3d4-0010-4a00-8000-000000000010", seed: 110, type: "other", type_source: "default", title: null, duration_sec: 372, daysAgo: 0, hour: 13, minute: 25, minutesAgo: 20, status: "recorded", has_system_track: false },
 ];
 

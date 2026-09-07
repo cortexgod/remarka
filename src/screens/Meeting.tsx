@@ -9,7 +9,8 @@ import { Markdown } from "../lib/markdown";
 import { Timeline } from "../components/Timeline";
 import { Transcript, type Highlight } from "../components/Transcript";
 import { BaselineBlock, Kpis, MetricsTable, Prosody, Questions, ScoreBreakdown, ThreeThings } from "../components/ReportBlocks";
-import { Delta } from "../components/Bits";
+import { Delta, ScoreRing } from "../components/Bits";
+import { Icon } from "../components/Icons";
 
 export default function Meeting() {
   const { id = "" } = useParams();
@@ -47,7 +48,7 @@ export default function Meeting() {
   if (err && !report) {
     return (
       <div className="page">
-        <Link to="/">← Лента</Link>
+        <Link to="/" className="back"><Icon name="back" /> Встречи</Link>
         <div className="note" style={{ marginTop: 20 }}>
           <p>{err}</p>
         </div>
@@ -61,10 +62,10 @@ export default function Meeting() {
     const p = progress[m.id];
     return (
       <div className="page">
-        <Link to="/">← Лента</Link>
+        <Link to="/" className="back"><Icon name="back" /> Встречи</Link>
         <p className="eyebrow" style={{ marginTop: 20 }}>{typeLabel(m.meeting_type)} · {fmtDateLong(m.started_at)}</p>
         <h1 className="title">{m.title ?? capitalize(typeLabel(m.meeting_type))}</h1>
-        <p className="lede">{fmtDur(m.duration_sec)}{m.has_system_track ? " · две дорожки" : " · только микрофон"}</p>
+        <p className="lede">{fmtDur(m.duration_sec)}{m.has_system_track ? " · с собеседниками" : " · только твой голос"}</p>
         {m.status === "analyzing" && (
           <div className="card">
             <div className="row between">
@@ -74,7 +75,7 @@ export default function Meeting() {
             <div className="progress" style={{ marginTop: 10 }}>
               <div className="bar" style={{ width: `${p?.pct ?? 0}%` }} />
             </div>
-            <p className="hint" style={{ marginTop: 10 }}>Стадии: чтение → границы речи → распознавание → выравнивание → паузы → просодия → метрики → смысл → конспект → запись. Тридцать минут аудио — две‑три минуты на ноутбуке.</p>
+            <p className="hint" style={{ marginTop: 10 }}>Полчаса записи разбираются две‑три минуты. Этот экран можно закрыть — разбор продолжится.</p>
           </div>
         )}
         {m.status === "recorded" && (
@@ -88,7 +89,6 @@ export default function Meeting() {
             <p><strong>Разбор не удался.</strong> {m.error}</p>
             <div className="row" style={{ marginTop: 10 }}>
               <button className="btn primary" onClick={() => run(api.analyzeMeeting(m.id, null))}>Повторить</button>
-              <Link to="/settings" className="btn">Проверить движок</Link>
             </div>
           </div>
         )}
@@ -160,9 +160,9 @@ function ReportView({ report, card, src, onChanged, onDeleted }: { report: Repor
     <div className="page page-wide meeting">
       <div className="mt-top">
         <div>
-          <Link to="/" className="back">← Лента</Link>
+          <Link to="/" className="back"><Icon name="back" /> Встречи</Link>
           <p className="eyebrow" style={{ marginTop: 14 }}>
-            {fmtDateLong(report.meeting.started_at)} · {fmtDur(D)} · {report.meeting.has_system_track ? "две дорожки" : "только микрофон"}
+            {fmtDateLong(report.meeting.started_at)} · {fmtDur(D)} · {report.meeting.has_system_track ? "с собеседниками" : "только твой голос"}
           </p>
           {editing ? (
             <input className="input title-input" value={title} autoFocus onChange={(e) => setTitle(e.target.value)} onBlur={saveTitle} onKeyDown={(e) => e.key === "Enter" && saveTitle()} />
@@ -173,25 +173,26 @@ function ReportView({ report, card, src, onChanged, onDeleted }: { report: Repor
           )}
           <div className="row" style={{ gap: 10 }}>
             <label className="row" style={{ gap: 8 }}>
-              <span className="label">тип встречи</span>
+              <span className="label">Тип встречи</span>
               <select className="select inline" value={card.meeting_type} onChange={(e) => changeType(e.target.value as MeetingType)}>
                 {TYPE_ORDER.map((t) => (
                   <option key={t} value={t}>{typeLabel(t)}</option>
                 ))}
               </select>
             </label>
-            <span className="hint">
-              {card.type_source === "user" ? "ты выбрал сам" : mean ? `похоже на это (${Math.round(mean.meeting_type.confidence * 100)} %): ${mean.meeting_type.reason}` : "тип не определён — выбери, и нормы подстроятся"}
+            <span className="hint" title={mean?.meeting_type.reason}>
+              {card.type_source === "user" ? "выбран вручную" : mean ? "определён по разговору" : "выбери тип — нормы подстроятся"}
             </span>
           </div>
         </div>
         <div className="score-box">
-          <div className="kpi big">
-            <span className="v">
-              {report.score.overall}
-              {delta != null && <small><Delta v={delta} digits={0} /></small>}
-            </span>
-            <span className="k">{report.score.basis === "baseline" ? "оценка · по сравнению с тобой обычным" : "оценка · по общим нормам"}</span>
+          <div className="score-main">
+            <div className="score-text">
+              <span className="k">Оценка из 100</span>
+              <span className="hint">{report.score.basis === "baseline" ? "по сравнению с тобой обычным" : "по общим нормам"}</span>
+              {delta != null && <span className="hint">к прошлой встрече <Delta v={delta} digits={0} /></span>}
+            </div>
+            <ScoreRing value={report.score.overall} size={84} stroke={6} />
           </div>
           <div className="row" style={{ gap: 6 }}>
             <button className="btn small ghost" onClick={() => run(api.analyzeMeeting(card.id, null), "Разбираем заново")}>Разобрать заново</button>
@@ -204,7 +205,7 @@ function ReportView({ report, card, src, onChanged, onDeleted }: { report: Repor
 
       <div className="player">
         <button className="btn small" onClick={player.toggle} aria-label={player.playing ? "Пауза" : "Слушать"}>
-          {player.playing ? "❚❚ Пауза" : "▶ Слушать запись"}
+          {player.playing ? <><Icon name="pause" /> Пауза</> : <><Icon name="play" /> Слушать</>}
         </button>
         <span className="mono">{fmtTime(player.time)} / {fmtTime(D)}</span>
         {player.silent && <span className="hint">звук недоступен в браузере — позиция двигается без звука</span>}
@@ -230,22 +231,21 @@ function ReportView({ report, card, src, onChanged, onDeleted }: { report: Repor
 
           <div className="section">
             <div className="section-head">
-              <h2 className="h"><span className="num">Три вещи</span>Что поправить в первую очередь</h2>
-              <span className="aside">{mean ? `модель ${mean.model}` : ""}</span>
+              <h2 className="h">Что поправить в первую очередь</h2>
             </div>
             <ThreeThings report={report} onSeek={seek} />
           </div>
 
           <div className="section">
             <div className="section-head">
-              <h2 className="h"><span className="num">Просодия</span>Как это звучало</h2>
+              <h2 className="h">Как это звучало</h2>
             </div>
             <Prosody report={report} time={player.time} onSeek={seek} />
           </div>
 
           <div className="section">
             <div className="section-head">
-              <h2 className="h"><span className="num">Вопросы</span>Собеседник спросил — ты ответил</h2>
+              <h2 className="h">Вопросы собеседника</h2>
               {mean && (
                 <span className="aside">
                   структура: {mean.structure.kept ? "держалась" : "поплыла"}
@@ -259,7 +259,7 @@ function ReportView({ report, card, src, onChanged, onDeleted }: { report: Repor
           {mean && (
             <div className="section">
               <div className="section-head">
-                <h2 className="h"><span className="num">Конспект</span>О чём договорились</h2>
+                <h2 className="h">О чём договорились</h2>
               </div>
               <div className="grid-2 summary">
                 <Markdown text={mean.summary} />
@@ -287,7 +287,7 @@ function ReportView({ report, card, src, onChanged, onDeleted }: { report: Repor
 
           <div className="section">
             <div className="section-head">
-              <h2 className="h"><span className="num">База</span>Сравнение с собой</h2>
+              <h2 className="h">Сравнение с тобой обычным</h2>
             </div>
             <BaselineBlock report={report} />
           </div>

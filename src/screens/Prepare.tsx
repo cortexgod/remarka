@@ -25,8 +25,8 @@ export default function Prepare() {
 
   return (
     <div className="page">
-      <h1 className="title">Три вопроса, которые зададут</h1>
-      <p className="lede">Вставь тему или повестку — получишь чеклист под тип встречи и вопросы, к которым стоит подготовиться заранее.</p>
+      <h1 className="title">Подготовка</h1>
+      <p className="lede">Опиши, о чём будет встреча, — получишь короткий чеклист и вопросы, которые тебе, скорее всего, зададут.</p>
       <div className="card prep-form">
         <label className="field">
           <span className="label">Тема или повестка</span>
@@ -34,14 +34,14 @@ export default function Prepare() {
         </label>
         <div className="row between">
           <label className="row" style={{ gap: 8 }}>
-            <span className="label">тип</span>
+            <span className="label">Тип встречи</span>
             <select className="select inline" value={type} onChange={(e) => setType(e.target.value as MeetingType)}>
               {TYPE_ORDER.filter((t) => t !== "training").map((t) => (
                 <option key={t} value={t}>{typeLabel(t)}</option>
               ))}
             </select>
           </label>
-          <button className="btn primary" onClick={go} disabled={busy || !topic.trim()}>{busy ? "Думаем…" : "Подготовить"}</button>
+          <button className="btn primary" onClick={go} disabled={busy || !topic.trim()}>{busy ? "Готовим…" : "Подготовить"}</button>
         </div>
       </div>
       {res && (
@@ -60,7 +60,7 @@ export default function Prepare() {
             </ul>
           </div>
           <div>
-            <div className="section-head"><h2 className="h">Спросят</h2><span className="aside">{res.backend}</span></div>
+            <div className="section-head"><h2 className="h">Что спросят</h2></div>
             <div className="qa">
               {res.likely_questions.map((q, i) => (
                 <div className="q" key={i}>

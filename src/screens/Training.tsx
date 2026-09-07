@@ -75,7 +75,7 @@ export default function Training() {
   return (
     <div className="page">
       <h1 className="title">Тренировка</h1>
-      <p className="lede">Задание, запись только с микрофона, разбор — как после настоящей встречи. Пишется ровно столько, сколько длится задание.</p>
+      <p className="lede">Короткое задание на одну‑две минуты: запись остановится сама, а разбор будет таким же, как после настоящей встречи.</p>
 
       <div className="training">
         <div className="tasks">
@@ -99,7 +99,7 @@ export default function Training() {
           {!task && <p className="hint">Выбери задание.</p>}
           {task && !isMine && (
             <>
-              <p className="eyebrow">{fmtTime(task.duration_sec)} · {task.targets_metric ? metricLabel(task.targets_metric) : "без метрики"}</p>
+              <p className="eyebrow">{fmtTime(task.duration_sec)} · {task.targets_metric ? metricLabel(task.targets_metric) : "смысл ответа"}</p>
               <h2 className="h" style={{ marginBottom: 10 }}>{task.title}</h2>
               <p className="task-instr">{task.instruction}</p>
               {rec ? (
@@ -135,7 +135,7 @@ export default function Training() {
                 </div>
                 <div>
                   <div className="big-timer accent">{wpm != null ? `≈${Math.round(wpm)}` : "—"}</div>
-                  <span className="hint">сл/мин сейчас · ориентир 100–130 · оценка по слогам, точный темп будет в разборе</span>
+                  <span className="hint">слов в минуту, примерно · норма 100–130</span>
                 </div>
               </div>
               <TempoBar wpm={wpm} />

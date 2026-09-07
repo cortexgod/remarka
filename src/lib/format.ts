@@ -25,16 +25,16 @@ export const STATUS_LABELS: Record<MeetingStatus, string> = {
 };
 
 export const STAGE_LABELS: Record<string, string> = {
-  load: "чтение аудио",
-  vad: "границы речи",
-  asr: "распознавание",
-  align: "выравнивание",
-  fillers: "заполненные паузы",
-  prosody: "просодия",
-  metrics: "метрики",
-  meaning: "слой смысла",
-  summary: "конспект",
-  write: "запись отчёта",
+  load: "слушаем запись",
+  vad: "ищем речь",
+  asr: "распознаём слова",
+  align: "расставляем время",
+  fillers: "ищем «э‑э» и паузы",
+  prosody: "слушаем интонацию",
+  metrics: "считаем показатели",
+  meaning: "готовим советы",
+  summary: "пишем конспект",
+  write: "сохраняем",
 };
 
 export const APP_LABELS: Record<string, string> = {
@@ -96,7 +96,29 @@ export function fmtPct(v: number | null | undefined, digits = 0): string {
 
 const MONTHS_SHORT = ["янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
 const MONTHS_NOM = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+const MONTHS_GEN = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
 const WEEKDAYS = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
+const WEEKDAYS_FULL = ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
+
+/** Заголовок дня в ленте: «Сегодня», «Вчера», день недели на этой неделе, дальше — «20 августа». */
+export function dayLabel(iso: string, now = new Date()): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso;
+  const start = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diff = Math.round((start(now) - start(d)) / 86400000);
+  if (diff === 0) return "Сегодня";
+  if (diff === 1) return "Вчера";
+  if (diff > 1 && diff < 7) return WEEKDAYS_FULL[d.getDay()];
+  const s = `${d.getDate()} ${MONTHS_GEN[d.getMonth()]}`;
+  return d.getFullYear() === now.getFullYear() ? s : `${s} ${d.getFullYear()}`;
+}
+
+/** Время без даты: «14:30» */
+export function fmtClock(iso: string): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
 
 export function fmtDate(iso: string, withTime = true): string {
   const d = new Date(iso);

@@ -1,4 +1,4 @@
-/* Токены дизайна: в духе Termius — тёмно‑синий фон, мягкие скруглённые поверхности без рамок,
+/* Токены дизайна: в духе Termius — тёмно‑синий фон, мягкие скруглённые поверхности с едва заметной кромкой,
    один синий акцент, геометрический гротеск. Тёмная тема по умолчанию, светлая — по настройке. */
 :root {
   color-scheme: dark;
@@ -6,15 +6,18 @@
   --bg: #1f2536;          /* фон контента */
   --bg-2: #2a3145;        /* поверхности: поля, кнопки, карточки */
   --bg-3: #353d55;        /* наведение / нажатие */
-  --sidebar: #1a1f2e;
+  --sidebar: #191e2c;
   --titlebar-bg: #171b28;
   --ink: #f3f5f9;
   --ink-2: #9aa3b8;
   --ink-3: #6b7490;
   --rule: #2e364b;
   --rule-soft: #283042;
+  --edge: rgba(255, 255, 255, .05);        /* кромка поверхностей */
+  --edge-strong: rgba(255, 255, 255, .1);
+  --ring-track: rgba(255, 255, 255, .08);
   --ctrl-border: transparent;
-  --ctrl-shadow: none;
+  --ctrl-shadow: inset 0 0 0 1px var(--edge);
 
   --accent: #2d8cff;
   --accent-hover: #4a9dff;
@@ -32,7 +35,7 @@
   --f: "Manrope Variable", "Manrope", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
   --f-mono: ui-monospace, "SF Mono", Menlo, monospace;
 
-  --radius: 10px;
+  --radius: 12px;
   --radius-s: 8px;
   --rail-w: 216px;
   --pad: 28px;
@@ -61,8 +64,11 @@
   --ink-3: #9aa3b8;
   --rule: #e1e5ee;
   --rule-soft: #eaedf4;
-  --ctrl-border: rgba(20, 30, 60, .10);
-  --ctrl-shadow: 0 1px 2px rgba(20, 30, 60, .06);
+  --edge: rgba(20, 30, 60, .08);
+  --edge-strong: rgba(20, 30, 60, .16);
+  --ring-track: rgba(20, 30, 60, .1);
+  --ctrl-border: transparent;
+  --ctrl-shadow: inset 0 0 0 1px var(--edge), 0 1px 2px rgba(20, 30, 60, .06);
   --accent: #2d7ff2;
   --accent-hover: #1f6fe0;
   --accent-wash: rgba(45, 127, 242, .12);

@@ -41,7 +41,7 @@ export function RecordDialog({ open, onClose, onStart, presetTitle }: Props) {
           <label className="field">
             <span className="label">Тип встречи</span>
             <select className="select" value={type} onChange={(e) => setType(e.target.value as MeetingType | "")}>
-              <option value="">определить автоматически</option>
+              <option value="">Определить по разговору</option>
               {TYPE_ORDER.filter((t) => t !== "training").map((t) => (
                 <option key={t} value={t}>
                   {typeLabel(t)}
@@ -53,11 +53,11 @@ export function RecordDialog({ open, onClose, onStart, presetTitle }: Props) {
             <label className="field">
               <span className="label">Микрофон</span>
               <select className="select" value={device} onChange={(e) => setDevice(e.target.value)}>
-                <option value="">по умолчанию</option>
+                <option value="">Как в системе</option>
                 {devices.map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.name}
-                    {d.is_default ? " (системный)" : ""}
+                    {d.is_default ? " — основной" : ""}
                   </option>
                 ))}
               </select>
@@ -67,15 +67,14 @@ export function RecordDialog({ open, onClose, onStart, presetTitle }: Props) {
             <input type="checkbox" checked={system} disabled={!sysSupported} onChange={(e) => setSystem(e.target.checked)} />
             <span className="sw" />
             <span>
-              Писать системный звук (собеседников)
+              Записывать и собеседников
               {!sysSupported && <span className="hint">На этой системе недоступно</span>}
             </span>
           </label>
           {system && (
             <div className="note">
               <p>
-                Запись собеседников юридически скользкая: в ряде юрисдикций нужно согласие всех сторон. Предупреди участников. Без системного звука
-                разбор работает полностью, только без доли речи и перебиваний.
+                Собеседники попадут в запись — предупреди их об этом. Без их записи разбор тоже работает, только без доли речи и перебиваний.
               </p>
             </div>
           )}

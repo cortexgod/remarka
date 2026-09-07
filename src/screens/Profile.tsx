@@ -42,7 +42,7 @@ export default function Profile() {
         <div className="card profile-card">
           <div className="avatar big">{initials(p.name)}</div>
           <div className="profile-name">{p.name.trim() || "Без имени"}</div>
-          <div className="hint">{p.role.trim() || "Кем работаешь — не указано"}</div>
+          <div className="hint">{p.role.trim() || "Занятие не указано"}</div>
           <div className="hint" style={{ marginTop: 10 }}>{ready} {ready === 1 ? "разбор" : ready < 5 ? "разбора" : "разборов"}</div>
         </div>
 

@@ -4,6 +4,7 @@ import { api } from "../lib/api";
 import { useStore } from "../lib/store";
 import { GOAL_OPTIONS } from "../lib/metrics";
 import { TYPE_LABELS } from "../lib/format";
+import { Logo } from "../components/Logo";
 
 const ROLES = ["Фаундер", "Продажи", "Руководитель", "Преподаватель", "Разработчик", "Маркетинг", "Консультант", "Студент"];
 const MEETING_CHIPS: MeetingType[] = ["pitch", "demo", "sales", "interview", "standup", "lecture", "one_on_one"];
@@ -70,13 +71,14 @@ export default function Onboarding() {
     <div className="onb" onKeyDown={onKey}>
       <div className="onb-drag" data-tauri-drag-region />
       <div className="onb-card">
+        <div className="onb-logo"><Logo size={30} /></div>
         <div className="onb-dots" aria-hidden="true">
           {steps.map((s, i) => <span key={s} className={i === step ? "on" : i < step ? "past" : ""} />)}
         </div>
 
         {cur === "name" && (
           <>
-            <p className="onb-kicker">Привет! Это Ремарка.</p>
+            <p className="onb-kicker">Давай знакомиться</p>
             <h1 className="onb-q">Как тебя зовут?</h1>
             <p className="onb-hint">Так к тебе будут обращаться в советах после встреч.</p>
             <input ref={inputRef} className="input onb-input" value={p.name} placeholder="Имя" onChange={(e) => setP({ ...p, name: e.target.value })} />

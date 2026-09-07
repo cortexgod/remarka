@@ -1,7 +1,7 @@
 /** Блоки экрана разбора: KPI, «Три вещи», просодия, вопросы, конспект, база, таблица метрик. */
 import { memo, useMemo, useState } from "react";
 import type { Report, TimePoint } from "../types/contracts";
-import { fmtDur, fmtNum, fmtPct, fmtSigned, fmtTime, typeLabel } from "../lib/format";
+import { fmtDur, fmtNum, fmtPct, fmtTime, typeLabel } from "../lib/format";
 import { METRIC_DEFS, METRIC_BY_KEY, STATUS_TEXT, fmtMetricFull, fmtMetricValue, getMetric, higherIsBetter, metricLabel, refText } from "../lib/metrics";
 import { useWidth } from "../lib/useWidth";
 import { Delta } from "./Bits";
@@ -30,22 +30,20 @@ export function Kpis({ report }: { report: Report }) {
           {fpt?.value ?? "—"}
           <small>{fp?.value != null ? `${fmtNum(fp.value, 1)} в мин` : ""}</small>
         </span>
-        <span className="k">заполненных пауз</span>
+        <span className="k">«э‑э» и «м‑м»</span>
       </div>
-      <div className={"kpi " + (tr?.status ?? "")}>
-        <span className="v">{tr?.value != null ? fmtPct(tr.value) : "—"}</span>
-        <span className="k">доля своей речи</span>
-      </div>
+      {tr?.value != null && (
+        <div className={"kpi " + (tr.status ?? "")}>
+          <span className="v">{fmtPct(tr.value)}</span>
+          <span className="k">твоя доля речи</span>
+        </div>
+      )}
       <div className={"kpi " + (pr?.status ?? "")}>
         <span className="v">
           {pr?.value != null ? fmtNum(pr.value, 1) : "—"}
-          <small>пт</small>
+          <small>полутонов</small>
         </span>
-        <span className="k">диапазон тона</span>
-      </div>
-      <div className="kpi">
-        <span className="v">{fmtTime(report.meeting.duration_sec)}</span>
-        <span className="k">{typeLabel(report.meeting.type)}</span>
+        <span className="k">живость интонации</span>
       </div>
     </div>
   );
@@ -74,7 +72,7 @@ export function ThreeThings({ report, onSeek }: { report: Report; onSeek: Seek }
   if (!mean.three_things.length) {
     return (
       <div className="note soft">
-        <p>Модель не смогла подтвердить ни одну рекомендацию дословной цитатой — такие правки не показываются (риск 04).</p>
+        <p>Ни один совет не подтвердился дословной цитатой из записи, поэтому советов к этой встрече нет.</p>
       </div>
     );
   }
@@ -82,7 +80,7 @@ export function ThreeThings({ report, onSeek }: { report: Report; onSeek: Seek }
     <div className="things">
       {mean.three_things.map((t, i) => (
         <article className="thing" key={i}>
-          <div className="thing-n mono">0{i + 1}</div>
+          <div className="thing-n">{i + 1}</div>
           <div className="thing-body">
             <h3 className="h">{t.title}</h3>
             <p className="muted">{t.why}</p>
@@ -102,7 +100,7 @@ export function ThreeThings({ report, onSeek }: { report: Report; onSeek: Seek }
       ))}
       {mean.dropped_things > 0 && (
         <p className="hint">
-          Ещё {mean.dropped_things} {mean.dropped_things === 1 ? "рекомендация отброшена" : "рекомендации отброшены"}: модель не смогла подтвердить их дословной цитатой.
+          Ещё {mean.dropped_things} {mean.dropped_things === 1 ? "совет не показан" : "совета не показаны"}: они не подтвердились цитатой из записи.
         </p>
       )}
     </div>
@@ -175,7 +173,7 @@ export function Prosody({ report, time, onSeek }: { report: Report; time: number
   const l2 = report.metrics.layer2;
   const D = report.meeting.duration_sec;
   const rows: { key: string; hint: string }[] = [
-    { key: "layer2.pitch_range_st", hint: "меньше 4 пт — монотонно" },
+    { key: "layer2.pitch_range_st", hint: "меньше 4 — монотонно" },
     { key: "layer2.phrase_final_decay_db", hint: "«съедание» окончаний" },
     { key: "layer2.rising_statements_share", hint: "утверждение звучит как вопрос" },
     { key: "layer2.loudness_drift_db", hint: "«сдулся» ко второй половине" },
@@ -196,18 +194,14 @@ export function Prosody({ report, time, onSeek }: { report: Report; time: number
       </div>
       <div className="grid-2 pro-charts">
         <div>
-          <span className="label">Громкость моей речи, дБ</span>
+          <span className="label">Громкость, дБ</span>
           <MiniSeries points={report.timeline.loudness_db} duration={D} time={time} onSeek={onSeek} unit="дБ" baseline={l2.loudness_mean_db.value ?? undefined} digits={0} />
         </div>
         <div>
-          <span className="label">Тон относительно медианы, полутоны</span>
+          <span className="label">Высота голоса относительно обычной, полутоны</span>
           <MiniSeries points={report.timeline.pitch_semitones} duration={D} time={time} onSeek={onSeek} unit="пт" baseline={0} digits={1} color="var(--signal)" />
         </div>
       </div>
-      <p className="hint">
-        Медиана тона {l2.pitch_median_hz.value != null ? `${fmtNum(l2.pitch_median_hz.value, 0)} Гц` : "—"} · джиттер {fmtNum(l2.jitter_pct.value, 2)} % · шиммер {fmtNum(l2.shimmer_pct.value, 2)} %
-        {l2.start_jitter_ratio.value != null && ` · джиттер старта ×${fmtNum(l2.start_jitter_ratio.value, 2)}`}. Джиттер и шиммер сравниваются только с твоей базой.
-      </p>
     </div>
   );
 }
@@ -283,7 +277,7 @@ export function BaselineBlock({ report }: { report: Report }) {
     return (
       <div className="note soft">
         <p>
-          <strong>Калибровка: {b.meetings_used} из {b.meetings_needed}.</strong> Первые три встречи собирают твой личный базовый уровень; до этого оценка — по ориентирам для типа «{typeLabel(report.meeting.type)}».
+          <strong>Знакомство: {b.meetings_used} из {b.meetings_needed}.</strong> Первые три встречи нужны, чтобы понять твою обычную манеру. Пока оценка считается по общим нормам для типа «{typeLabel(report.meeting.type)}».
         </p>
       </div>
     );
@@ -295,10 +289,9 @@ export function BaselineBlock({ report }: { report: Report }) {
         <thead>
           <tr>
             <th>Показатель</th>
-            <th className="num">База</th>
+            <th className="num">Обычно</th>
             <th className="num">Сейчас</th>
-            <th className="num">Дельта</th>
-            <th className="num">z</th>
+            <th className="num">Разница</th>
           </tr>
         </thead>
         <tbody>
@@ -318,14 +311,13 @@ export function BaselineBlock({ report }: { report: Report }) {
                     <Delta v={d.delta} digits={def.digits} goodWhenHigher={hib} />
                   )}
                 </td>
-                <td className="num faint">{d.z == null ? "—" : fmtSigned(d.z, 1)}</td>
               </tr>
             );
           })}
         </tbody>
       </table>
       <p className="hint" style={{ marginTop: 8 }}>
-        База — среднее по первым трём встречам ({b.meetings_used}); z — отклонение в стандартных отклонениях. Оценка {report.score.overall} считалась относительно базы.
+        «Обычно» — среднее по твоим первым трём встречам. Оценка {report.score.overall} считалась относительно него.
       </p>
     </div>
   );
@@ -357,7 +349,7 @@ export function MetricsTable({ report }: { report: Report }) {
       <button className="btn link" style={{ marginTop: 8 }} onClick={() => setShowAll((v) => !v)}>{showAll ? "Скрыть подробные показатели" : "Показать все показатели"}</button>
       {top.length > 0 && (
         <div className="crutch-top">
-          <span className="label">Слова‑костыли</span>
+          <span className="label">Какие слова‑паразиты</span>
           <div className="row" style={{ gap: 6, marginTop: 6 }}>
             {top.map((c) => (
               <span key={c.word} className="tag">
@@ -410,10 +402,10 @@ export function ScoreBreakdown({ report }: { report: Report }) {
       <table className="t">
         <thead>
           <tr>
-            <th>Компонент</th>
+            <th>Показатель</th>
             <th className="num">Вес</th>
-            <th className="num">Штраф</th>
-            <th className="num">Снято</th>
+            <th className="num">Отклонение</th>
+            <th className="num">Снято баллов</th>
           </tr>
         </thead>
         <tbody>
