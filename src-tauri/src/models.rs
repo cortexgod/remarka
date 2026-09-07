@@ -123,6 +123,8 @@ impl TypeSource {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum LlmBackend {
+    Auto,
+    Remote,
     ClaudeCli,
     AnthropicApi,
     #[default]
@@ -132,6 +134,8 @@ pub enum LlmBackend {
 impl LlmBackend {
     pub fn as_str(&self) -> &'static str {
         match self {
+            LlmBackend::Auto => "auto",
+            LlmBackend::Remote => "remote",
             LlmBackend::ClaudeCli => "claude_cli",
             LlmBackend::AnthropicApi => "anthropic_api",
             LlmBackend::None => "none",

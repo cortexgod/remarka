@@ -30,7 +30,7 @@ export type MeetingStatus =
   | "ready"
   | "error";
 
-export type LlmBackend = "claude_cli" | "anthropic_api" | "none";
+export type LlmBackend = "auto" | "remote" | "claude_cli" | "anthropic_api" | "none"; // auto — движок выбирает сам (remote при настроенном сервере советов)
 
 export interface TimeSpan {
   start: number;

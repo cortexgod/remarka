@@ -266,6 +266,8 @@
     },
     "LlmBackend": {
       "enum": [
+        "auto",
+        "remote",
         "claude_cli",
         "anthropic_api",
         "none"

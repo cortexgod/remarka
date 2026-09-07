@@ -56,7 +56,7 @@
  [],
  False,
  False,
- 1788809751,
+ 1788809994,
  [('run',
    '/Users/cortx_god/Desktop/Проекты/remarka/engine/.venv/lib/python3.11/site-packages/PyInstaller/bootloader/Darwin-64bit/run',
    'EXECUTABLE')],
