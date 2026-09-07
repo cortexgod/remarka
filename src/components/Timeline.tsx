@@ -64,7 +64,7 @@ export const Timeline = memo(function Timeline({ report, time, onSeek }: Props) 
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="none"
         role="img"
-        aria-label="Таймлайн встречи: темп речи, заполненные паузы, реплики собеседника"
+        aria-label="Ход встречи: темп речи по минутам, «э‑э», реплики и вопросы собеседника"
         onClick={(e) => onSeek(tAt(e))}
         onMouseMove={(e) => setHover(tAt(e))}
         onMouseLeave={() => setHover(null)}
@@ -77,14 +77,17 @@ export const Timeline = memo(function Timeline({ report, time, onSeek }: Props) 
         {/* ориентир */}
         {geo.refHi != null && <line x1={0} y1={geo.refHi} x2={W} y2={geo.refHi} stroke="var(--rule-soft)" strokeDasharray="2 4" />}
         {geo.refLo != null && <line x1={0} y1={geo.refLo} x2={W} y2={geo.refLo} stroke="var(--rule-soft)" strokeDasharray="2 4" />}
+        {geo.refHi != null && geo.refLo != null && (
+          <rect x={0} y={geo.refHi} width={W} height={Math.max(1, geo.refLo - geo.refHi)} fill="var(--ok)" opacity={0.10} />
+        )}
         {geo.refHi != null && geo.m.ref_high != null && (
-          <text x={2} y={geo.refHi - 3} fill="var(--ink-3)" fontFamily="var(--f-mono)" fontSize="9">
-            {geo.m.ref_high}
+          <text x={6} y={geo.refHi - 4} fill="var(--ink-2)" fontFamily="var(--f)" fontSize="10" fontWeight="600">
+            выше {geo.m.ref_high} — быстро
           </text>
         )}
         {geo.refLo != null && geo.m.ref_low != null && (
-          <text x={2} y={geo.refLo - 3} fill="var(--ink-3)" fontFamily="var(--f-mono)" fontSize="9">
-            {geo.m.ref_low}
+          <text x={6} y={geo.refLo + 12} fill="var(--ink-2)" fontFamily="var(--f)" fontSize="10" fontWeight="600">
+            ниже {geo.m.ref_low} — медленно
           </text>
         )}
         <line x1={0} y1={yBase} x2={W} y2={yBase} stroke="var(--rule)" />
@@ -125,9 +128,9 @@ export const Timeline = memo(function Timeline({ report, time, onSeek }: Props) 
         {hover != null && (
           <g pointerEvents="none">
             <line x1={geo.x(hover)} y1={top} x2={geo.x(hover)} y2={axisY} stroke="var(--ink-3)" strokeDasharray="2 3" />
-            <rect x={Math.min(geo.x(hover) + 6, W - 96)} y={top} width={90} height={16} fill="var(--surface)" stroke="var(--rule)" />
-            <text x={Math.min(geo.x(hover) + 10, W - 92)} y={top + 11.5} fill="var(--ink)" fontFamily="var(--f-mono)" fontSize="9.5">
-              {fmtTime(hover)} · {hoverWpm ?? "—"} сл/мин
+            <rect x={Math.min(geo.x(hover) + 6, W - 116)} y={top} width={110} height={16} rx={4} fill="var(--bg-3)" />
+            <text x={Math.min(geo.x(hover) + 10, W - 112)} y={top + 11.5} fill="var(--ink)" fontFamily="var(--f)" fontSize="10">
+              {fmtTime(hover)} · {hoverWpm != null ? Math.round(hoverWpm) : "—"} слов/мин
             </text>
           </g>
         )}
@@ -140,15 +143,15 @@ export const Timeline = memo(function Timeline({ report, time, onSeek }: Props) 
       <div className="legend">
         <span>
           <i className="swatch line" style={{ background: "var(--signal)" }} />
-          темп речи
+          темп речи, слов в минуту
         </span>
         <span>
-          <i className="swatch" style={{ background: "var(--signal-wash)", border: "1px solid var(--rule)" }} />
-          ориентир {geo.m.ref_low ?? "—"}–{geo.m.ref_high ?? "—"}
+          <i className="swatch" style={{ background: "var(--ok)", opacity: 0.35 }} />
+          норма {geo.m.ref_low ?? "—"}–{geo.m.ref_high ?? "—"}
         </span>
         <span>
           <i className="swatch" style={{ background: "var(--ink-3)", width: 2 }} />
-          заполненная пауза
+          «э‑э», «м‑м»
         </span>
         <span>
           <i className="swatch" style={{ background: "var(--signal)", height: 5 }} />
@@ -156,7 +159,7 @@ export const Timeline = memo(function Timeline({ report, time, onSeek }: Props) 
         </span>
         <span>
           <i className="swatch" style={{ border: "1px solid var(--signal)", borderRadius: "50%", background: "var(--surface)" }} />
-          вопрос
+          вопрос собеседника
         </span>
       </div>
     </div>

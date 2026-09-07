@@ -373,6 +373,8 @@ export interface AppState {
   system_audio_supported: boolean;
   meeting_app_running: string | null; // "zoom" | "meet" | "teams" | "telemost" | null
   data_dir: string;
+  asr_model: string; // текущая модель распознавания
+  asr_model_cached: boolean; // скачана ли она (иначе первый запуск предложит скачать)
 }
 
 export interface AudioDevice {
@@ -381,7 +383,16 @@ export interface AudioDevice {
   is_default: boolean;
 }
 
+/** Профиль человека: кто говорит и что хочет улучшить. Уходит в промпт слоя смысла. */
+export interface Profile {
+  name: string; // как обращаться
+  role: string; // чем занимается: «фаундер», «продажи», «репетитор»
+  about: string; // свободный текст: о чём обычно встречи, что важно
+  goal_metric: string | null; // ключ метрики, которую хочет улучшить, например "layer1.filled_pauses_per_min"
+}
+
 export interface Settings {
+  profile: Profile;
   system_audio_default: boolean; // по умолчанию false (риск 03)
   auto_analyze: boolean; // анализ сразу после стопа
   asr_model: string; // "large-v3-turbo" | "large-v3" | "medium" | "small" | "base"

@@ -21,7 +21,8 @@ def docs_dir() -> Path | None:
     env = os.environ.get("REMARKA_DOCS_DIR")
     candidates = [Path(env)] if env else []
     here = Path(__file__).resolve()
-    candidates += [here.parents[2] / "docs", Path.cwd() / "docs", Path.cwd().parent / "docs"]
+    # here.parents[2] — исходники (engine/../docs); here.parents[1] — сборка PyInstaller (_internal/docs)
+    candidates += [here.parents[2] / "docs", here.parents[1] / "docs", Path.cwd() / "docs", Path.cwd().parent / "docs"]
     for c in candidates:
         if (c / SCHEMA_NAMES["report"]).exists():
             return c

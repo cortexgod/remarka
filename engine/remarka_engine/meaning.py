@@ -24,7 +24,7 @@ from typing import Any, Callable, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-from .llm import LlmClient, LlmError, load_prompt, log, render_prompt
+from .llm import LlmClient, LlmError, load_prompt, log, profile_text, render_prompt
 
 __all__ = [
     "MEETING_TYPES",
@@ -583,6 +583,7 @@ def build_meaning_prompt(report: dict[str, Any], user_meeting_type: str | None =
         metrics_json=json.dumps(compact_metrics(report), ensure_ascii=False, indent=1),
         events_json=json.dumps(compact_events(report), ensure_ascii=False, indent=1),
         transcript=build_transcript_text(report),
+        profile_block=profile_text(),
     )
 
 

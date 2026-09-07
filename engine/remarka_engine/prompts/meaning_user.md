@@ -1,3 +1,6 @@
+## Кто говорит
+{{profile_block}}
+
 ## Встреча
 - Тип: {{meeting_type_line}}
 - Название: {{title}}

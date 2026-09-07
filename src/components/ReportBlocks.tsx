@@ -1,6 +1,5 @@
 /** Блоки экрана разбора: KPI, «Три вещи», просодия, вопросы, конспект, база, таблица метрик. */
 import { memo, useMemo } from "react";
-import { Link } from "react-router-dom";
 import type { Report, TimePoint } from "../types/contracts";
 import { fmtDur, fmtNum, fmtPct, fmtSigned, fmtTime, typeLabel } from "../lib/format";
 import { METRIC_DEFS, METRIC_BY_KEY, STATUS_TEXT, fmtMetricFull, fmtMetricValue, getMetric, higherIsBetter, metricLabel, refText } from "../lib/metrics";
@@ -22,7 +21,7 @@ export function Kpis({ report }: { report: Report }) {
       <div className={"kpi " + (wpm?.status ?? "")}>
         <span className="v">
           {wpm?.value != null ? fmtNum(wpm.value, 0) : "—"}
-          <small>сл/мин</small>
+          <small>слов/мин</small>
         </span>
         <span className="k">темп</span>
       </div>
@@ -297,7 +296,7 @@ export function BaselineBlock({ report }: { report: Report }) {
       <table className="t">
         <thead>
           <tr>
-            <th>Метрика</th>
+            <th>Показатель</th>
             <th className="num">База</th>
             <th className="num">Сейчас</th>
             <th className="num">Дельта</th>
@@ -336,8 +335,8 @@ export function BaselineBlock({ report }: { report: Report }) {
 
 export function MetricsTable({ report }: { report: Report }) {
   const groups: { g: "layer1" | "layer2"; title: string }[] = [
-    { g: "layer1", title: "Слой 1 · из транскрипта" },
-    { g: "layer2", title: "Слой 2 · из сигнала" },
+    { g: "layer1", title: "По словам" },
+    { g: "layer2", title: "По голосу" },
   ];
   const top = report.metrics.layer1.crutch_top;
   return (
@@ -345,9 +344,9 @@ export function MetricsTable({ report }: { report: Report }) {
       <table className="t">
         <thead>
           <tr>
-            <th>Метрика</th>
+            <th>Показатель</th>
             <th className="num">Значение</th>
-            <th className="num">Ориентир</th>
+            <th className="num">Норма</th>
           </tr>
         </thead>
         <tbody>
@@ -369,7 +368,7 @@ export function MetricsTable({ report }: { report: Report }) {
         </div>
       )}
       <p className="hint" style={{ marginTop: 10 }}>
-        Оценка: {report.score.overall} из 100, {report.score.basis === "baseline" ? "относительно твоей базы" : "по ориентирам типа встречи"}. Полный расчёт — в <Link to="/progress">прогрессе</Link>.
+        Оценка: {report.score.overall} из 100, {report.score.basis === "baseline" ? "по сравнению с тобой обычным" : "по общим нормам для этого типа встречи"}.
       </p>
     </div>
   );

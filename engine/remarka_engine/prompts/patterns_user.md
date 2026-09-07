@@ -1,3 +1,6 @@
+## Кто говорит
+{{profile_block}}
+
 ## Встречи за период ({{n}} шт., по возрастанию даты)
 Поля: `metrics.<ключ>.value/status/ref` — значение, статус по ориентиру и сам ориентир; `wpm_first_3min` / `wpm_rest` — темп в первые 3 минуты и дальше; `filled_pauses_per_min_first_3min` / `filled_pauses_per_min_rest` — заполненные паузы в минуту в начале и дальше; `score` — общая оценка 0–100.
 

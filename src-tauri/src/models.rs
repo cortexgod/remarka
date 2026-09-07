@@ -192,6 +192,8 @@ pub struct AppStateInfo {
     pub system_audio_supported: bool,
     pub meeting_app_running: Option<String>,
     pub data_dir: String,
+    pub asr_model: String,
+    pub asr_model_cached: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -201,9 +203,26 @@ pub struct AudioDevice {
     pub is_default: bool,
 }
 
+/// Профиль человека (см. contracts.ts `Profile`).
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Profile {
+    pub name: String,
+    pub role: String,
+    pub about: String,
+    pub goal_metric: Option<String>,
+}
+
+impl Profile {
+    pub fn is_empty(&self) -> bool {
+        self.name.trim().is_empty() && self.role.trim().is_empty() && self.about.trim().is_empty() && self.goal_metric.is_none()
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Settings {
+    pub profile: Profile,
     pub system_audio_default: bool,
     pub auto_analyze: bool,
     pub asr_model: String,
@@ -224,6 +243,7 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Settings {
+            profile: Profile::default(),
             system_audio_default: false,
             auto_analyze: true,
             asr_model: "large-v3-turbo".to_string(),

@@ -64,6 +64,10 @@ pub fn find_launcher(settings: &Settings) -> Option<Launcher> {
             log::warn!("settings.engine_python = {custom}: файла нет, ищем дальше");
         }
     }
+    // движок, вложенный в приложение (bundle.resources → engine-dist/)
+    if let Some(p) = bundled_engine() {
+        return Some(Launcher::Sidecar(p));
+    }
     if let Some(dir) = dev_engine_dir() {
         let py = if cfg!(windows) {
             dir.join(".venv").join("Scripts").join("python.exe")
@@ -86,6 +90,38 @@ pub fn find_launcher(settings: &Settings) -> Option<Launcher> {
         }
     }
     None
+}
+
+/// `Remarka.app/Contents/Resources/engine-dist/remarka-engine` (macOS) или `<exe>/engine-dist/` (Windows/Linux).
+pub fn bundled_engine() -> Option<PathBuf> {
+    let dir = exe_dir()?;
+    let name = if cfg!(windows) { "remarka-engine.exe" } else { "remarka-engine" };
+    let candidates = [
+        dir.join("..").join("Resources").join("engine-dist").join(name),
+        dir.join("engine-dist").join(name),
+    ];
+    candidates.into_iter().find(|p| p.is_file())
+}
+
+/// Скачана ли модель распознавания в кэш HF (`~/.cache/huggingface/hub/models--<repo>/snapshots/*/model.bin`).
+pub fn asr_model_cached(model: &str) -> bool {
+    let repo = match model {
+        "large-v3-turbo" | "turbo" => "mobiuslabsgmbh/faster-whisper-large-v3-turbo".to_string(),
+        m if m.contains('/') => m.to_string(),
+        m => format!("Systran/faster-whisper-{m}"),
+    };
+    let cache = std::env::var_os("HF_HUB_CACHE")
+        .map(PathBuf::from)
+        .or_else(|| std::env::var_os("HF_HOME").map(|h| PathBuf::from(h).join("hub")))
+        .or_else(|| dirs_home().map(|h| h.join(".cache").join("huggingface").join("hub")));
+    let Some(cache) = cache else { return false };
+    let snaps = cache.join(format!("models--{}", repo.replace('/', "--"))).join("snapshots");
+    let Ok(rd) = std::fs::read_dir(snaps) else { return false };
+    rd.flatten().any(|e| e.path().join("model.bin").is_file())
+}
+
+fn dirs_home() -> Option<PathBuf> {
+    std::env::var_os("HOME").map(PathBuf::from)
 }
 
 pub fn engine_ok(settings: &Settings) -> bool {
@@ -122,6 +158,12 @@ impl Launcher {
         if let Some(key) = settings.anthropic_api_key.as_deref().map(str::trim) {
             if !key.is_empty() {
                 cmd.env("ANTHROPIC_API_KEY", key);
+            }
+        }
+        // профиль человека — в промпт слоя смысла
+        if !settings.profile.is_empty() {
+            if let Ok(js) = serde_json::to_string(&settings.profile) {
+                cmd.env("REMARKA_PROFILE_JSON", js);
             }
         }
         // claude CLI не из PATH: локальный бинарник или SSH-обёртка (слой смысла на VPS)

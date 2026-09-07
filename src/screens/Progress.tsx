@@ -53,11 +53,11 @@ export default function Progress() {
             <dd>{data.meetings_total}</dd>
           </div>
           <div>
-            <dt>Серия</dt>
+            <dt>Дней подряд</dt>
             <dd>{data.streak_days} {plural(data.streak_days, "рабочий день", "рабочих дня", "рабочих дней")} подряд</dd>
           </div>
           <div>
-            <dt>База</dt>
+            <dt>Знакомство</dt>
             <dd>{data.baseline?.status === "ready" ? "готова, сравниваем с тобой" : `калибровка ${data.baseline?.meetings_used ?? 0} из ${data.baseline?.meetings_needed ?? 3}`}</dd>
           </div>
           <div>
@@ -74,7 +74,7 @@ export default function Progress() {
         <div className="section" style={{ paddingTop: 0 }}>
           <div className="section-head">
             <h2 className="h">Оценка по встречам</h2>
-            <span className="aside">точка — разбор · пустая точка — тренировка</span>
+            <span className="aside">точка — встреча · пустая точка — тренировка</span>
           </div>
           <LineChart points={data.score} format={(v) => fmtNum(v, 0)} height={150} />
         </div>
@@ -84,7 +84,7 @@ export default function Progress() {
         <div className="section">
           <div className="section-head">
             <h2 className="h">Метрики</h2>
-            <span className="aside">пунктир — твоя база</span>
+            <span className="aside">пунктир — как ты говоришь обычно</span>
           </div>
           <div className="charts">
             {PROGRESS_KEYS.map((k) => {

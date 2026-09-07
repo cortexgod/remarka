@@ -21,6 +21,7 @@ export const DEFAULT_SETTINGS: Settings = {
   llm_model: "claude-opus-5",
   anthropic_api_key: null,
   llm_cli_path: null,
+  profile: { name: "", role: "", about: "", goal_metric: null },
   language: "ru",
   input_device: null,
   engine_python: null,

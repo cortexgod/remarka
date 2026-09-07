@@ -175,3 +175,27 @@
 .live-row .hint { display: block; margin-top: 2px; max-width: 34ch; }
 .big-timer.accent { color: var(--accent); }
 .spark { display: block; width: 100%; height: 56px; margin-top: 10px; background: color-mix(in srgb, var(--ink) 4%, transparent); border-radius: 6px; }
+
+/* профиль в панели и экран профиля */
+.avatar { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 12.5px; flex: none; letter-spacing: .02em; }
+.avatar.big { width: 72px; height: 72px; font-size: 24px; margin-bottom: 12px; }
+.rail-profile { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; color: var(--ink); margin-bottom: 4px; }
+.rail-profile:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); text-decoration: none; }
+.rail-profile.active { background: var(--bg-2); }
+.rail-profile-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.rail-profile-name { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.profile-grid { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 900px) { .profile-grid { grid-template-columns: 1fr; } }
+.profile-card { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 22px 16px; }
+.profile-name { font-weight: 700; font-size: 16px; }
+
+/* настройки: «Дополнительно» */
+details.advanced { margin-top: 30px; background: var(--bg-2); border-radius: var(--radius); padding: 12px 16px; }
+details.advanced summary { cursor: pointer; font-weight: 700; font-size: 15px; list-style: none; display: flex; align-items: center; gap: 8px; }
+details.advanced summary::-webkit-details-marker { display: none; }
+details.advanced summary::before { content: "›"; display: inline-block; transition: transform .15s; color: var(--ink-2); }
+details.advanced[open] summary::before { transform: rotate(90deg); }
+
+/* первый запуск */
+.firstrun { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 14px; background: var(--accent-wash); }
+.firstrun .muted { max-width: 60ch; margin: 4px 0 0; }

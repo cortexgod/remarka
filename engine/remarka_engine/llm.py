@@ -98,6 +98,41 @@ def load_prompt(name: str) -> str:
     return _PROMPT_CACHE[name]
 
 
+GOAL_LABELS = {
+    "layer1.wpm": "темп речи",
+    "layer1.filled_pauses_per_min": "меньше «э-э» и «м-м»",
+    "layer1.crutch_words_per_min": "меньше слов-паразитов",
+    "layer2.pitch_range_st": "живее интонация",
+    "layer1.hesitation_pauses_per_min": "меньше запинок внутри фраз",
+    "layer1.talk_ratio": "баланс «говорю / слушаю»",
+    "layer2.phrase_final_decay_db": "не проглатывать окончания",
+    "layer2.rising_statements_share": "утверждать, а не спрашивать интонацией",
+    "layer1.mean_sentence_len": "короче фразы",
+}
+
+
+def profile_text() -> str:
+    """Блок «Кто говорит» для промптов: из REMARKA_PROFILE_JSON (Settings.profile), иначе пусто."""
+    raw = os.environ.get("REMARKA_PROFILE_JSON", "").strip()
+    if not raw:
+        return "Нет данных о говорящем — обращайся на «ты», без имени."
+    try:
+        prof = json.loads(raw)
+    except Exception:  # noqa: BLE001
+        return "Нет данных о говорящем — обращайся на «ты», без имени."
+    lines = []
+    if prof.get("name"):
+        lines.append(f"Имя: {prof['name']} (обращайся по имени, на «ты»)")
+    if prof.get("role"):
+        lines.append(f"Чем занимается: {prof['role']}")
+    if prof.get("about"):
+        lines.append(f"О себе и о встречах: {prof['about']}")
+    goal = prof.get("goal_metric")
+    if goal:
+        lines.append(f"Хочет улучшить в первую очередь: {GOAL_LABELS.get(goal, goal)} — учитывай это, выбирая три правки")
+    return "\n".join(lines) if lines else "Нет данных о говорящем — обращайся на «ты», без имени."
+
+
 def render_prompt(template: str, **values: Any) -> str:
     """Подставляет ``{{key}}`` в шаблон. Незаполненный плейсхолдер — ошибка программиста."""
     for key, value in values.items():

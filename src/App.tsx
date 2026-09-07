@@ -10,6 +10,7 @@ import Training from "./screens/Training";
 import Prepare from "./screens/Prepare";
 import Settings from "./screens/Settings";
 import Overlay from "./screens/Overlay";
+import Profile, { initials } from "./screens/Profile";
 
 const ICONS: Record<string, string> = {
   feed: "M4 6h16M4 12h16M4 18h10",
@@ -36,8 +37,9 @@ const NAV: { to: string; icon: string; label: string }[] = [
 ];
 
 function Rail() {
-  const { appState, tick, meetings } = useStore();
+  const { appState, tick, meetings, settings } = useStore();
   const rec = appState?.recording;
+  const prof = settings?.profile;
   const analyzing = meetings.filter((m) => m.status === "analyzing").length;
   return (
     <aside className="rail">
@@ -54,6 +56,13 @@ function Rail() {
         ))}
       </nav>
       <div className="spacer" />
+      <NavLink to="/profile" className={({ isActive }) => "rail-profile" + (isActive ? " active" : "")}>
+        <span className="avatar">{initials(prof?.name ?? "")}</span>
+        <span className="rail-profile-text">
+          <span className="rail-profile-name">{prof?.name?.trim() || "Профиль"}</span>
+          <span className="hint">{prof?.role?.trim() || "кто говорит"}</span>
+        </span>
+      </NavLink>
       <div className="rail-foot">
         {rec ? (
           <div>
@@ -112,6 +121,7 @@ function Shell() {
           <Route path="/training" element={<Training />} />
           <Route path="/prepare" element={<Prepare />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<Feed />} />
         </Routes>
       </main>

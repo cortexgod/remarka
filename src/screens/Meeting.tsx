@@ -173,7 +173,7 @@ function ReportView({ report, card, src, onChanged, onDeleted }: { report: Repor
           )}
           <div className="row" style={{ gap: 10 }}>
             <label className="row" style={{ gap: 8 }}>
-              <span className="label">тип</span>
+              <span className="label">тип встречи</span>
               <select className="select inline" value={card.meeting_type} onChange={(e) => changeType(e.target.value as MeetingType)}>
                 {TYPE_ORDER.map((t) => (
                   <option key={t} value={t}>{typeLabel(t)}</option>
@@ -181,7 +181,7 @@ function ReportView({ report, card, src, onChanged, onDeleted }: { report: Repor
               </select>
             </label>
             <span className="hint">
-              {card.type_source === "user" ? "задан вручную" : mean ? `определён моделью, уверенность ${Math.round(mean.meeting_type.confidence * 100)} % — ${mean.meeting_type.reason}` : "по умолчанию"}
+              {card.type_source === "user" ? "ты выбрал сам" : mean ? `похоже на это (${Math.round(mean.meeting_type.confidence * 100)} %): ${mean.meeting_type.reason}` : "тип не определён — выбери, и нормы подстроятся"}
             </span>
           </div>
         </div>
@@ -191,10 +191,10 @@ function ReportView({ report, card, src, onChanged, onDeleted }: { report: Repor
               {report.score.overall}
               {delta != null && <small><Delta v={delta} digits={0} /></small>}
             </span>
-            <span className="k">оценка · {report.score.basis === "baseline" ? "относительно базы" : "по ориентирам"}</span>
+            <span className="k">{report.score.basis === "baseline" ? "оценка · по сравнению с тобой обычным" : "оценка · по общим нормам"}</span>
           </div>
           <div className="row" style={{ gap: 6 }}>
-            <button className="btn small ghost" onClick={() => run(api.analyzeMeeting(card.id, null), "Разбор запущен заново")}>Пересчитать</button>
+            <button className="btn small ghost" onClick={() => run(api.analyzeMeeting(card.id, null), "Разбираем заново")}>Разобрать заново</button>
             <button className="btn small ghost" onClick={del}>Удалить</button>
           </div>
         </div>
@@ -204,11 +204,11 @@ function ReportView({ report, card, src, onChanged, onDeleted }: { report: Repor
 
       <div className="player">
         <button className="btn small" onClick={player.toggle} aria-label={player.playing ? "Пауза" : "Слушать"}>
-          {player.playing ? "❚❚ Пауза" : "▶ Слушать"}
+          {player.playing ? "❚❚ Пауза" : "▶ Слушать запись"}
         </button>
         <span className="mono">{fmtTime(player.time)} / {fmtTime(D)}</span>
         {player.silent && <span className="hint">звук недоступен в браузере — позиция двигается без звука</span>}
-        <span className="hint" style={{ marginLeft: "auto" }}>пробел — пауза · клик по таймлайну или слову — переход</span>
+        <span className="hint" style={{ marginLeft: "auto" }}>клик по графику или по слову — перемотка · пробел — пауза</span>
       </div>
 
       <Timeline report={report} time={player.time} onSeek={(t) => seek(t)} />
@@ -295,7 +295,7 @@ function ReportView({ report, card, src, onChanged, onDeleted }: { report: Repor
 
         <aside className="mt-side">
           <div className="side-tabs">
-            <button className={"tabbtn" + (tab === "metrics" ? " on" : "")} onClick={() => setTab("metrics")}>Все метрики</button>
+            <button className={"tabbtn" + (tab === "metrics" ? " on" : "")} onClick={() => setTab("metrics")}>Все показатели</button>
             <button className={"tabbtn" + (tab === "score" ? " on" : "")} onClick={() => setTab("score")}>Из чего оценка</button>
           </div>
           {tab === "metrics" ? <MetricsTable report={report} /> : <ScoreBreakdown report={report} />}

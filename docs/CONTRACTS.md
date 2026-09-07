@@ -410,3 +410,10 @@ Mock‑режим: если `window.__TAURI_INTERNALS__` отсутствует 
 ## 15. Слой смысла на сервере (7 сентября 2026)
 
 Вместо локального `claude login` модель вызывается на VPS пользователя, где Claude Code уже авторизован: `scripts/claude-ssh` — обёртка, которая пробрасывает аргументы и stdin в `ssh root@VPS /usr/local/bin/remarka-claude …` (на сервере скрипт подгружает `~/.claude/oauth.env` пользователя `assistant` и запускает `~/.local/bin/claude`). Аргументы экранируются `printf %q`, соединение переиспользуется (`ControlMaster`, 120 с). Настройка `Settings.llm_cli_path` → переменная `REMARKA_CLAUDE_CLI` для движка; бэкенд остаётся `claude_cli`, протокол не меняется. Наружу уходит только текст (транскрипт, метрики, промпт); аудио не покидает компьютер. Переопределения: `REMARKA_SSH_HOST`, `REMARKA_SSH_KEY`.
+
+## 16. Профиль, простые настройки, встроенный движок (7 сентября 2026, вечер)
+
+- `Settings.profile: Profile {name, role, about, goal_metric}` — уходит движку переменной `REMARKA_PROFILE_JSON`; `llm.profile_text()` превращает её в блок «Кто говорит» (`{{profile_block}}` во всех трёх промптах). `goal_metric` — ключ метрики, модель строит три правки вокруг него.
+- `AppState.asr_model` и `AppState.asr_model_cached` (Rust проверяет HF‑кэш `models--<repo>/snapshots/*/model.bin`); лента показывает баннер первого запуска со скачиванием модели.
+- Встроенный движок: `engine/build-sidecar.sh` → `engine/dist/remarka-engine/` (PyInstaller onedir, entry `sidecar_main.py` с `freeze_support`), `bundle.resources` кладёт его в `Contents/Resources/engine-dist/`; `find_launcher`: `engine_python` из настроек → встроенный → dev `.venv` → `remarka-engine` рядом с бинарником. `docs_dir()` дополнительно ищет `_internal/docs`.
+- Интерфейс: настройки разделены на простые (микрофон, собеседники, предложение записи, окно записи, автоанализ, подключение Claude, тема) и «Дополнительно» (модели, пути, импорт WAV); экран «Профиль»; подписи метрик переписаны простыми словами (`src/lib/metrics.ts`), у графиков подписаны норма и направления.

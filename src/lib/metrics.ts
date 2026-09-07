@@ -10,68 +10,72 @@ export interface MetricDef {
   unit: string;
   digits: number;
   group: MetricGroup;
+  /** объяснение простыми словами: что это и почему важно */
   how: string;
   /** отображение значения */
   fmt?: (v: number) => string;
   /** значение в графике прогресса (без форматирования) */
   chart?: boolean;
+  /** показывать только в «подробностях» */
+  advanced?: boolean;
 }
 
 const pct = (v: number) => fmtPct(v, 0);
 
+// Подписи — человеческим языком. Точные формулы — в docs/CONTRACTS.md §4.
 export const METRIC_DEFS: MetricDef[] = [
-  { key: "layer1.wpm", label: "Темп речи", short: "темп", unit: "сл/мин", digits: 0, group: "layer1", chart: true,
-    how: "Слова без филлеров на минуту моей речи, медиана по окнам 15 с" },
-  { key: "layer1.articulation_wpm", label: "Артикуляционный темп", short: "артикуляция", unit: "сл/мин", digits: 0, group: "layer1",
-    how: "То же, но без пауз вовсе: отделяет «тараторит» от «не делает пауз»" },
-  { key: "layer1.filled_pauses_total", label: "Заполненные паузы, всего", short: "э‑э всего", unit: "", digits: 0, group: "layer1",
-    how: "«э‑э», «м‑м» — по транскрипту и по сигналу (детектор)" },
-  { key: "layer1.filled_pauses_per_min", label: "Заполненные паузы", short: "э‑э в мин", unit: "в мин", digits: 1, group: "layer1", chart: true,
-    how: "Заполненные паузы на минуту моей речи" },
-  { key: "layer1.crutch_words_total", label: "Слова‑костыли, всего", short: "костыли всего", unit: "", digits: 0, group: "layer1",
-    how: "«как бы», «типа», «на самом деле», «вот», «собственно» и другие по словарю" },
-  { key: "layer1.crutch_words_per_min", label: "Слова‑костыли", short: "костыли в мин", unit: "в мин", digits: 1, group: "layer1", chart: true,
-    how: "Слова‑костыли на минуту моей речи" },
-  { key: "layer1.structural_pauses_per_min", label: "Структурные паузы", short: "структурные паузы", unit: "в мин", digits: 1, group: "layer1", chart: true,
-    how: "Паузы ≥ 0,8 с на границе мысли. Их должно быть много" },
-  { key: "layer1.hesitation_pauses_per_min", label: "Хезитационные паузы", short: "хезитации", unit: "в мин", digits: 1, group: "layer1", chart: true,
-    how: "Паузы 0,3–0,8 с внутри синтагмы — там, где паузы быть не должно" },
-  { key: "layer1.talk_ratio", label: "Доля своей речи", short: "доля речи", unit: "%", digits: 0, group: "layer1", fmt: pct, chart: true,
-    how: "Моя речь / (моя + собеседника) по двум дорожкам. Нет без системного звука" },
-  { key: "layer1.mean_sentence_len", label: "Длина предложения", short: "длина фразы", unit: "слов", digits: 1, group: "layer1", chart: true,
-    how: "Среднее число слов в предложении без филлеров" },
-  { key: "layer1.long_sentences_share", label: "Длинные предложения", short: "длинные фразы", unit: "%", digits: 0, group: "layer1", fmt: pct,
+  { key: "layer1.wpm", label: "Темп речи", short: "темп", unit: "слов/мин", digits: 0, group: "layer1", chart: true,
+    how: "Сколько слов в минуту ты говоришь. Слишком быстро — слушатель не успевает, слишком медленно — скучает" },
+  { key: "layer1.articulation_wpm", label: "Темп без пауз", short: "без пауз", unit: "слов/мин", digits: 0, group: "layer1", advanced: true,
+    how: "Скорость самой речи, если убрать все паузы. Показывает, ты тараторишь или просто не делаешь пауз" },
+  { key: "layer1.filled_pauses_total", label: "«Э‑э» и «м‑м», всего", short: "э‑э всего", unit: "", digits: 0, group: "layer1", advanced: true,
+    how: "Сколько раз за встречу" },
+  { key: "layer1.filled_pauses_per_min", label: "«Э‑э» и «м‑м»", short: "э‑э в мин", unit: "в минуту", digits: 1, group: "layer1", chart: true,
+    how: "Сколько раз за минуту твоей речи. Самая заметная для слушателя вещь" },
+  { key: "layer1.crutch_words_total", label: "Слова‑паразиты, всего", short: "паразиты всего", unit: "", digits: 0, group: "layer1", advanced: true,
+    how: "«как бы», «типа», «ну», «вот», «на самом деле» и похожие" },
+  { key: "layer1.crutch_words_per_min", label: "Слова‑паразиты", short: "паразиты в мин", unit: "в минуту", digits: 1, group: "layer1", chart: true,
+    how: "«как бы», «типа», «ну», «вот» и похожие — сколько раз за минуту речи" },
+  { key: "layer1.structural_pauses_per_min", label: "Паузы между мыслями", short: "паузы между мыслями", unit: "в минуту", digits: 1, group: "layer1", chart: true,
+    how: "Паузы после законченной мысли. Это хорошо: они дают слушателю время понять" },
+  { key: "layer1.hesitation_pauses_per_min", label: "Запинки", short: "запинки", unit: "в минуту", digits: 1, group: "layer1", chart: true,
+    how: "Короткие паузы посреди фразы, там где их быть не должно. Звучат как неуверенность" },
+  { key: "layer1.talk_ratio", label: "Доля твоей речи", short: "доля речи", unit: "%", digits: 0, group: "layer1", fmt: pct, chart: true,
+    how: "Сколько времени говорил ты, а сколько собеседник. Считается, только если записаны собеседники" },
+  { key: "layer1.mean_sentence_len", label: "Длина фразы", short: "длина фразы", unit: "слов", digits: 1, group: "layer1", chart: true,
+    how: "Среднее число слов в предложении. Длиннее 22 слов — слушатель теряет начало, пока дойдёт до конца" },
+  { key: "layer1.long_sentences_share", label: "Длинные фразы", short: "длинные фразы", unit: "%", digits: 0, group: "layer1", fmt: pct, advanced: true,
     how: "Доля предложений длиннее 22 слов" },
-  { key: "layer1.mtld", label: "Лексическое разнообразие", short: "MTLD", unit: "", digits: 0, group: "layer1",
-    how: "MTLD (McCarthy & Jarvis): не зависит от длины текста, в отличие от TTR" },
-  { key: "layer1.interruptions_by_me", label: "Перебивал я", short: "перебивал я", unit: "", digits: 0, group: "layer1",
-    how: "Пересечение речи на двух дорожках ≥ 0,5 с, когда собеседник говорил ≥ 1 с" },
-  { key: "layer1.interruptions_by_other", label: "Перебивали меня", short: "перебивали меня", unit: "", digits: 0, group: "layer1",
-    how: "Симметрично: собеседник начал, пока я говорил" },
-  { key: "layer1.my_speech_sec", label: "Моя речь", short: "моя речь", unit: "с", digits: 0, group: "layer1",
-    how: "Сумма речевых сегментов VAD по микрофону" },
-  { key: "layer1.other_speech_sec", label: "Речь собеседника", short: "речь собеседника", unit: "с", digits: 0, group: "layer1",
-    how: "Сумма речевых сегментов по системной дорожке" },
-  { key: "layer1.words_total", label: "Слов всего", short: "слов", unit: "", digits: 0, group: "layer1",
-    how: "Слова без филлеров" },
-  { key: "layer2.pitch_median_hz", label: "Медиана тона", short: "тон", unit: "Гц", digits: 0, group: "layer2",
-    how: "Медиана основного тона по озвонченным кадрам моей речи" },
-  { key: "layer2.pitch_range_st", label: "Диапазон тона", short: "диапазон тона", unit: "пт", digits: 1, group: "layer2", chart: true,
-    how: "P90 − P10 основного тона в полутонах. Меньше — монотонность" },
-  { key: "layer2.phrase_final_decay_db", label: "Затухание к концу фразы", short: "затухание", unit: "дБ", digits: 1, group: "layer2", chart: true,
-    how: "Медианное падение громкости на последних 0,5 с фразы. «Съедание» окончаний" },
-  { key: "layer2.rising_statements_share", label: "Восходящие утверждения", short: "восходящие", unit: "%", digits: 0, group: "layer2", fmt: pct, chart: true,
-    how: "Доля утверждений, где тон в конце выше на ≥ 2 пт — звучит как вопрос" },
-  { key: "layer2.jitter_pct", label: "Джиттер", short: "джиттер", unit: "%", digits: 2, group: "layer2",
-    how: "Микронестабильность частоты тона. Относительно себя (по базе)" },
-  { key: "layer2.shimmer_pct", label: "Шиммер", short: "шиммер", unit: "%", digits: 2, group: "layer2",
-    how: "Микронестабильность амплитуды. Относительно себя (по базе)" },
-  { key: "layer2.start_jitter_ratio", label: "Джиттер старта", short: "джиттер старта", unit: "×", digits: 2, group: "layer2",
-    how: "Джиттер первых 2 минут / остального: волнение на старте" },
-  { key: "layer2.loudness_drift_db", label: "Дрейф громкости", short: "дрейф громкости", unit: "дБ", digits: 1, group: "layer2", chart: true,
-    how: "Вторая половина минус первая: видно, как человек «сдувается»" },
-  { key: "layer2.loudness_mean_db", label: "Средняя громкость", short: "громкость", unit: "дБ", digits: 1, group: "layer2",
-    how: "Средняя интенсивность моей речи" },
+  { key: "layer1.mtld", label: "Разнообразие слов", short: "разнообразие", unit: "", digits: 0, group: "layer1", advanced: true,
+    how: "Насколько разными словами ты говоришь. Чем выше, тем богаче речь" },
+  { key: "layer1.interruptions_by_me", label: "Перебивал я", short: "перебивал я", unit: "раз", digits: 0, group: "layer1",
+    how: "Сколько раз ты начал говорить, пока собеседник ещё говорил" },
+  { key: "layer1.interruptions_by_other", label: "Перебивали меня", short: "перебивали меня", unit: "раз", digits: 0, group: "layer1",
+    how: "Сколько раз собеседник начал говорить, пока говорил ты" },
+  { key: "layer1.my_speech_sec", label: "Ты говорил", short: "ты говорил", unit: "с", digits: 0, group: "layer1", advanced: true,
+    how: "Сколько секунд звучала твоя речь" },
+  { key: "layer1.other_speech_sec", label: "Говорил собеседник", short: "собеседник", unit: "с", digits: 0, group: "layer1", advanced: true,
+    how: "Сколько секунд звучала речь собеседника" },
+  { key: "layer1.words_total", label: "Слов всего", short: "слов", unit: "", digits: 0, group: "layer1", advanced: true,
+    how: "Слова без «э‑э» и «м‑м»" },
+  { key: "layer2.pitch_median_hz", label: "Высота голоса", short: "высота", unit: "Гц", digits: 0, group: "layer2", advanced: true,
+    how: "Обычная высота твоего голоса. Сама по себе ни хорошая, ни плохая" },
+  { key: "layer2.pitch_range_st", label: "Живость интонации", short: "интонация", unit: "полутонов", digits: 1, group: "layer2", chart: true,
+    how: "Насколько голос ходит вверх и вниз. Меньше 4 полутонов — звучит монотонно, и слушатель отключается" },
+  { key: "layer2.phrase_final_decay_db", label: "Проглатывание окончаний", short: "окончания", unit: "дБ", digits: 1, group: "layer2", chart: true,
+    how: "Насколько тише становится голос к концу фразы. Люди этого за собой не слышат" },
+  { key: "layer2.rising_statements_share", label: "Утверждения как вопросы", short: "вопросительный тон", unit: "%", digits: 0, group: "layer2", fmt: pct, chart: true,
+    how: "Доля фраз, где голос уходит вверх в конце, и утверждение звучит как вопрос — то есть неуверенно" },
+  { key: "layer2.jitter_pct", label: "Дрожание голоса", short: "дрожание", unit: "%", digits: 2, group: "layer2", advanced: true,
+    how: "Мелкие колебания высоты голоса. Сравнивается только с тобой обычным, нормы нет" },
+  { key: "layer2.shimmer_pct", label: "Дрожание громкости", short: "дрожание громкости", unit: "%", digits: 2, group: "layer2", advanced: true,
+    how: "Мелкие колебания громкости. Сравнивается только с тобой обычным" },
+  { key: "layer2.start_jitter_ratio", label: "Волнение в начале", short: "волнение в начале", unit: "×", digits: 2, group: "layer2", advanced: true,
+    how: "Дрожание голоса в первые две минуты по сравнению с остальной встречей. Больше 1 — на старте ты волновался" },
+  { key: "layer2.loudness_drift_db", label: "Громкость к концу", short: "громкость к концу", unit: "дБ", digits: 1, group: "layer2", chart: true,
+    how: "Стал ли ты тише ко второй половине встречи. Минус — «сдулся»" },
+  { key: "layer2.loudness_mean_db", label: "Громкость", short: "громкость", unit: "дБ", digits: 1, group: "layer2", advanced: true,
+    how: "Средняя громкость твоей речи" },
 ];
 
 export const METRIC_BY_KEY: Record<string, MetricDef> = Object.fromEntries(METRIC_DEFS.map((d) => [d.key, d]));
@@ -113,7 +117,7 @@ export function fmtMetricFull(key: string, v: number | null | undefined): string
   return def?.unit ? `${s} ${def.unit}` : s;
 }
 
-/** Ориентир текстом: «110–140», «≤ 2», «≥ 4», «—» */
+/** Норма текстом: «110–140», «до 2», «от 4», «—» */
 export function refText(key: string, mv: MetricValue | null | undefined): string {
   if (!mv) return "—";
   const def = metricDef(key);
@@ -122,19 +126,19 @@ export function refText(key: string, mv: MetricValue | null | undefined): string
     if (def?.fmt) return `${fmtNum(mv.ref_low * 100, 0)}–${fmtNum(mv.ref_high * 100, 0)} %`;
     return `${f(mv.ref_low)}–${f(mv.ref_high)}`;
   }
-  if (mv.ref_high != null) return `≤ ${f(mv.ref_high)}`;
-  if (mv.ref_low != null) return `≥ ${f(mv.ref_low)}`;
+  if (mv.ref_high != null) return `до ${f(mv.ref_high)}`;
+  if (mv.ref_low != null) return `от ${f(mv.ref_low)}`;
   return "—";
 }
 
 export const STATUS_TEXT: Record<MetricValue["status"], string> = {
-  good: "в норме",
+  good: "хорошо",
   warn: "на грани",
-  bad: "вне ориентира",
-  na: "нет ориентира",
+  bad: "стоит поправить",
+  na: "без нормы",
 };
 
-/** Ключи для графиков прогресса — в порядке важности */
+/** Ключи для графиков прогресса и целей профиля — в порядке важности */
 export const PROGRESS_KEYS = [
   "layer1.wpm",
   "layer1.filled_pauses_per_min",
@@ -144,6 +148,19 @@ export const PROGRESS_KEYS = [
   "layer1.talk_ratio",
   "layer2.phrase_final_decay_db",
   "layer2.rising_statements_share",
+];
+
+/** Цели для профиля: что человек хочет улучшить */
+export const GOAL_OPTIONS: { key: string; label: string }[] = [
+  { key: "layer1.filled_pauses_per_min", label: "Меньше «э‑э» и «м‑м»" },
+  { key: "layer1.crutch_words_per_min", label: "Меньше слов‑паразитов" },
+  { key: "layer1.wpm", label: "Держать темп" },
+  { key: "layer2.pitch_range_st", label: "Живее интонация" },
+  { key: "layer1.hesitation_pauses_per_min", label: "Меньше запинок" },
+  { key: "layer1.talk_ratio", label: "Больше слушать, меньше говорить" },
+  { key: "layer2.phrase_final_decay_db", label: "Договаривать окончания" },
+  { key: "layer2.rising_statements_share", label: "Утверждать, а не спрашивать" },
+  { key: "layer1.mean_sentence_len", label: "Короче фразы" },
 ];
 
 /** Направление «хорошо» для дельт: true — рост это хорошо */

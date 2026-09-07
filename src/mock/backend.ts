@@ -412,6 +412,8 @@ class MockBackend implements Backend {
       engine_ok: true,
       platform: "macos",
       system_audio_supported: true,
+    asr_model: "large-v3-turbo",
+    asr_model_cached: true,
       meeting_app_running: this.meetingApp,
       data_dir: DATA_DIR,
     };

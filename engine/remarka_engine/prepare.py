@@ -11,7 +11,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from .llm import LlmClient, LlmError, load_prompt, log, render_prompt
+from .llm import profile_text, LlmClient, LlmError, load_prompt, log, render_prompt
 from .meaning import MEETING_TYPES, MEETING_TYPE_LABELS
 
 __all__ = ["PrepLlmOutput", "TYPE_HINTS", "prepare_meeting"]
@@ -223,6 +223,7 @@ def prepare_meeting(
 
     user = render_prompt(
         load_prompt("prepare_user"),
+        profile_block=profile_text(),
         topic=topic,
         meeting_type=f"{mt} ({MEETING_TYPE_LABELS.get(mt, mt)})",
         type_hint=TYPE_HINTS.get(mt, TYPE_HINTS["other"]),

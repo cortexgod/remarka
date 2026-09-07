@@ -48,7 +48,7 @@ export function MeetingCardView({ m, progress, onAnalyze, onDelete }: Props) {
           <div className="kpi">
             <span className="v">
               {m.wpm != null ? fmtNum(m.wpm, 0) : "—"}
-              <small>сл/мин</small>
+              <small>слов/мин</small>
             </span>
             <span className="k">темп</span>
           </div>

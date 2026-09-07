@@ -47,11 +47,25 @@ export const LineChart = memo(function LineChart({ points, format, baseline, ref
   return (
     <div ref={ref} className="linechart">
       <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ display: "block" }} onMouseLeave={() => setHover(null)}>
-        {refLow != null && refHigh != null && <rect x={0} y={geo.y(refHigh)} width={W} height={Math.max(1, geo.y(refLow) - geo.y(refHigh))} fill="var(--surface-2)" />}
+        {refLow != null && refHigh != null && <rect x={0} y={geo.y(refHigh)} width={W} height={Math.max(1, geo.y(refLow) - geo.y(refHigh))} fill="var(--ok)" opacity={0.10} />}
         {refLow != null && refHigh == null && <line x1={0} y1={geo.y(refLow)} x2={W} y2={geo.y(refLow)} stroke="var(--rule)" strokeDasharray="1 3" />}
         {refHigh != null && refLow == null && <line x1={0} y1={geo.y(refHigh)} x2={W} y2={geo.y(refHigh)} stroke="var(--rule)" strokeDasharray="1 3" />}
         {baseline != null && <line x1={0} y1={geo.y(baseline)} x2={W} y2={geo.y(baseline)} stroke="var(--ink-3)" strokeDasharray="3 4" />}
         <line x1={0} y1={H - 22} x2={W} y2={H - 22} stroke="var(--rule)" />
+        <text x={2} y={11} fill="var(--ink-3)" fontFamily="var(--f)" fontSize="9.5">{format(geo.hi)}</text>
+        <text x={2} y={H - 26} fill="var(--ink-3)" fontFamily="var(--f)" fontSize="9.5">{format(geo.lo)}</text>
+        {refLow != null && refHigh != null && (
+          <text x={W - 2} y={geo.y(refHigh) + 10} textAnchor="end" fill="var(--ink-3)" fontFamily="var(--f)" fontSize="9.5">норма {format(refLow)}–{format(refHigh)}</text>
+        )}
+        {refHigh != null && refLow == null && (
+          <text x={W - 2} y={geo.y(refHigh) - 3} textAnchor="end" fill="var(--ink-3)" fontFamily="var(--f)" fontSize="9.5">норма до {format(refHigh)}</text>
+        )}
+        {refLow != null && refHigh == null && (
+          <text x={W - 2} y={geo.y(refLow) - 3} textAnchor="end" fill="var(--ink-3)" fontFamily="var(--f)" fontSize="9.5">норма от {format(refLow)}</text>
+        )}
+        {baseline != null && (
+          <text x={W - 2} y={geo.y(baseline) - 3} textAnchor="end" fill="var(--ink-2)" fontFamily="var(--f)" fontSize="9.5">ты обычно {format(baseline)}</text>
+        )}
         <path d={geo.d} fill="none" stroke={color} strokeWidth={1.5} vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
         {points.map((p, i) => (
           <g key={p.meeting_id + i} onMouseEnter={() => setHover(i)} onClick={() => nav(`/meeting/${p.meeting_id}`)} style={{ cursor: "pointer" }}>
@@ -68,8 +82,8 @@ export const LineChart = memo(function LineChart({ points, format, baseline, ref
         )}
         {hp && hover != null && (
           <g pointerEvents="none">
-            <rect x={Math.min(Math.max(2, geo.x(hover) - 70), W - 142)} y={2} width={140} height={16} fill="var(--surface)" stroke="var(--rule)" />
-            <text x={Math.min(Math.max(2, geo.x(hover) - 70), W - 142) + 4} y={13.5} fill="var(--ink)" fontFamily="var(--f-mono)" fontSize="9.5">
+            <rect x={Math.min(Math.max(2, geo.x(hover) - 70), W - 142)} y={2} width={140} height={16} rx={4} fill="var(--bg-3)" />
+            <text x={Math.min(Math.max(2, geo.x(hover) - 70), W - 142) + 4} y={13.5} fill="var(--ink)" fontFamily="var(--f)" fontSize="10">
               {fmtDate(hp.started_at, false)} · {format(hp.value)} · {typeLabel(hp.meeting_type)}
             </text>
           </g>

@@ -74,7 +74,7 @@ export default function Training() {
 
   return (
     <div className="page">
-      <h1 className="title">Режим без Zoom</h1>
+      <h1 className="title">Тренировка</h1>
       <p className="lede">Задание, запись только с микрофона, разбор — как после настоящей встречи. Пишется ровно столько, сколько длится задание.</p>
 
       <div className="training">

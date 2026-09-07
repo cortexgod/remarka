@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { FirstRun } from "../components/FirstRun";
 import { Link } from "react-router-dom";
 import type { Baseline, StartRecordingOpts } from "../types/contracts";
 import { api } from "../lib/api";
@@ -59,6 +60,7 @@ export default function Feed() {
         )}
       </div>
 
+      <FirstRun />
       {recording && <RecordingBar onStop={stop} onCancel={cancel} title={recTitle} />}
       <MeetingAppBanner
         onRecord={() => {
@@ -73,15 +75,15 @@ export default function Feed() {
             <>
               <span className="tag ok">база готова</span>
               <span>
-                Первые три встречи стали твоим базовым уровнем — дальше сравниваем тебя с тобой, ориентиры остаются фоном.{" "}
+                Приложение уже знает твою обычную манеру: теперь оценка показывает, лучше или хуже обычного ты говорил.{" "}
                 <Link to="/progress">Прогресс</Link>
               </span>
             </>
           ) : (
             <>
-              <span className="tag">калибровка</span>
+              <span className="tag">знакомство</span>
               <span>
-                {Math.min(readyNonTraining, 3)} из 3 встреч. После третьей появится личная база — и оценка станет относительно тебя, а не таблицы.
+                Знакомство: {Math.min(readyNonTraining, 3)} из 3 встреч. После третьей приложение узнает твою обычную манеру и будет сравнивать тебя с тобой, а не с таблицей.
               </span>
             </>
           )}

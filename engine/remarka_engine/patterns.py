@@ -18,7 +18,7 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-from .llm import LlmClient, LlmError, load_prompt, log, render_prompt
+from .llm import profile_text, LlmClient, LlmError, load_prompt, log, render_prompt
 from .meaning import MEETING_TYPE_LABELS, METRIC_KEYS
 
 __all__ = [
@@ -385,6 +385,7 @@ def analyze_patterns(
     observations = compute_observations(items)
     user = render_prompt(
         load_prompt("patterns_user"),
+        profile_block=profile_text(),
         n=len(items),
         meetings_json=json.dumps(items, ensure_ascii=False, indent=1),
         observations="\n".join(f"- {o}" for o in observations) or "- (закономерностей движок не нашёл — опирайся на числа выше)",
