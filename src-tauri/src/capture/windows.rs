@@ -48,7 +48,7 @@ impl SystemCapture for LoopbackCapture {
         let tick: mic::TickFn = Box::new(move |t: mic::MicTick| {
             level.set(Some(t.level_db));
         });
-        let handle = mic::start_with_picker(picker, path, tick, Duration::from_millis(200))
+        let handle = mic::start_with_picker(picker, path, tick, Duration::from_millis(200), None)
             .context("не удалось открыть loopback-поток WASAPI")?;
         self.handle = Some(handle);
         Ok(())

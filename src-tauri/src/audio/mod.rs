@@ -6,11 +6,12 @@ pub mod resample;
 pub mod tempo;
 
 use crate::capture::{self, LevelCell, SystemCapture};
-use crate::models::{events, EvRecordingTick};
+use crate::models::{events, EvRecordingTick, EvRecordingWarning};
 use anyhow::{anyhow, Context, Result};
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter};
 
 pub const TICK_INTERVAL: Duration = Duration::from_millis(250);
@@ -22,6 +23,8 @@ pub struct StartParams {
     /// Some(path) → писать системный звук.
     pub system_path: Option<PathBuf>,
     pub input_device: Option<String>,
+    /// Автостоп (тренировочные задания): запись останавливается сама по достижении лимита.
+    pub max_duration_sec: Option<f64>,
 }
 
 pub struct StopInfo {
@@ -86,10 +89,12 @@ impl ActiveRecording {
 pub fn start_recording(app: &AppHandle, params: StartParams) -> Result<ActiveRecording, String> {
     let mut system: Option<Box<dyn SystemCapture>> = None;
     let mut system_level: Option<Arc<LevelCell>> = None;
+    let mut system_ready_at: Option<Instant> = None;
     if let Some(path) = &params.system_path {
         let mut cap = capture::create()?;
         cap.start(path)
             .map_err(|e| format!("Не удалось начать запись системного звука: {e:#}"))?;
+        system_ready_at = Some(Instant::now());
         system_level = Some(cap.level_cell());
         system = Some(cap);
     }
@@ -97,6 +102,9 @@ pub fn start_recording(app: &AppHandle, params: StartParams) -> Result<ActiveRec
     let app_tick = app.clone();
     let id_tick = params.meeting_id.clone();
     let sys_level_tick = system_level.clone();
+    let max_duration = params.max_duration_sec;
+    let stop_requested = Arc::new(AtomicBool::new(false));
+    let system_warned = Arc::new(AtomicBool::new(false));
     let tick: mic::TickFn = Box::new(move |t: mic::MicTick| {
         let _ = app_tick.emit(
             events::RECORDING_TICK,
@@ -108,9 +116,50 @@ pub fn start_recording(app: &AppHandle, params: StartParams) -> Result<ActiveRec
                 wpm_estimate: t.wpm_estimate,
             },
         );
+        // системная дорожка оборвалась во время записи — сказать пользователю один раз
+        if let Some(cell) = &sys_level_tick {
+            if let Some(msg) = cell.error() {
+                if !system_warned.swap(true, Ordering::SeqCst) {
+                    let _ = app_tick.emit(
+                        events::RECORDING_WARNING,
+                        EvRecordingWarning {
+                            meeting_id: id_tick.clone(),
+                            message: format!("Системный звук перестал записываться: {msg}. Микрофон пишется дальше."),
+                        },
+                    );
+                }
+            }
+        }
+        // микрофон оборвался (WAV уже дописан) или достигнут лимит тренировки — остановить запись
+        let stop_reason = if let Some(e) = &t.error {
+            Some(e.clone())
+        } else if max_duration.map(|m| t.elapsed_sec >= m).unwrap_or(false) {
+            Some(String::new())
+        } else {
+            None
+        };
+        if let Some(reason) = stop_reason {
+            if !stop_requested.swap(true, Ordering::SeqCst) {
+                if !reason.is_empty() {
+                    let _ = app_tick.emit(
+                        events::RECORDING_WARNING,
+                        EvRecordingWarning { meeting_id: id_tick.clone(), message: reason },
+                    );
+                }
+                // стоп — из другого потока: do_stop_recording ждёт завершения потока микрофона
+                let app_stop = app_tick.clone();
+                let _ = std::thread::Builder::new()
+                    .name("recording-autostop".into())
+                    .spawn(move || {
+                        if let Err(e) = crate::commands::do_stop_recording(&app_stop) {
+                            log::warn!("автостоп записи: {e}");
+                        }
+                    });
+            }
+        }
     });
 
-    let mic = match mic::start(params.input_device.as_deref(), &params.mic_path, tick, TICK_INTERVAL) {
+    let mic = match mic::start(params.input_device.as_deref(), &params.mic_path, tick, TICK_INTERVAL, system_ready_at) {
         Ok(m) => m,
         Err(e) => {
             if let Some(mut cap) = system.take() {

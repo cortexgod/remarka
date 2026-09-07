@@ -44,10 +44,15 @@ def test_sentence_word_count_excludes_fillers():
 
 def test_pause_classification():
     # "слово," + 1.0 с → структурная; "слово" + 0.5 с → хезитационная; "слово" + 1.0 с → long; "слово," + 0.5 с → ничего
-    words = words_from_text("первое, второе третье четвёртое, пятое шестое", gaps={1: 1.0, 2: 0.5, 3: 1.0, 4: 0.5, 5: 0.1})
+    # (в тексте есть терминатор — предложения режутся по пунктуации, пауза 1,0 с внутри предложения = long)
+    words = words_from_text("первое, второе третье четвёртое, пятое шестое.", gaps={1: 1.0, 2: 0.5, 3: 1.0, 4: 0.5, 5: 0.1})
     ev = segmenter.find_pauses(words)
     kinds = [(e.kind, e.label) for e in ev]
     assert kinds == [("structural_pause", "1,0 с"), ("hesitation_pause", "0,5 с"), ("hesitation_pause", "long")]
+    # без пунктуации ASR предложения режутся по паузам ≥ 0,8 с, и такие паузы — границы мысли (структурные)
+    words_np = words_from_text("первое второе третье четвёртое пятое шестое", gaps={1: 1.0, 2: 0.5, 3: 1.0, 4: 0.5, 5: 0.1})
+    kinds_np = [(e.kind, e.label) for e in segmenter.find_pauses(words_np)]
+    assert kinds_np == [("structural_pause", "1,0 с"), ("hesitation_pause", "0,5 с"), ("structural_pause", "1,0 с"), ("hesitation_pause", "0,5 с")]
     assert ev[0].word_i == 1 and abs(ev[0].value - 1.0) < 1e-6
     assert ev[0].t == words[0].end and ev[0].end == words[1].start
 

@@ -353,6 +353,7 @@ pub mod events {
     pub const MEETING_APP: &str = "meeting-app:changed";
     pub const MEETINGS_CHANGED: &str = "meetings:changed";
     pub const SETTINGS_CHANGED: &str = "settings:changed";
+    pub const RECORDING_WARNING: &str = "recording:warning";
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -478,4 +479,11 @@ mod tests {
             serde_json::from_str(r#"{"system_audio":false,"meeting_type":"pitch","title":null}"#).unwrap();
         assert_eq!(o.meeting_type, Some(MeetingType::Pitch));
     }
+}
+
+/// Предупреждение во время записи (микрофон отключился, системная дорожка оборвалась, автостоп).
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct EvRecordingWarning {
+    pub meeting_id: String,
+    pub message: String,
 }

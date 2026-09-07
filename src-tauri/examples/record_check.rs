@@ -37,6 +37,7 @@ fn main() -> anyhow::Result<()> {
             )
         }),
         Duration::from_millis(250),
+        None,
     )?;
     std::thread::sleep(Duration::from_secs_f64(secs));
     let counted = handle.stop()?;

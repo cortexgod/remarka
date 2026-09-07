@@ -80,45 +80,51 @@ export function usePlayer(src: string | null, duration: number): Player {
     return () => cancelAnimationFrame(raf.current);
   }, [playing, silent, duration]);
 
+  // Колбэки стабильны (читают состояние через ref): иначе новый объект player на каждом
+  // тике времени ломал бы memo у сотен предложений транскрипта.
+  const timeRef = useRef(0);
+  timeRef.current = time;
+  const playingRef = useRef(false);
+  playingRef.current = playing;
+  const silentRef = useRef(silent);
+  silentRef.current = silent;
+  const durationRef = useRef(duration);
+  durationRef.current = duration;
+
   const play = useCallback(() => {
-    if (audio.current && !silent) {
+    if (audio.current && !silentRef.current) {
       audio.current.play().catch(() => setSilent(true));
     }
     clock.current = { t0: performance.now(), base: timeRef.current };
     setPlaying(true);
-  }, [silent]);
-
-  const timeRef = useRef(0);
-  timeRef.current = time;
+  }, []);
 
   const pause = useCallback(() => {
     audio.current?.pause();
     if (clock.current) {
       const t = clock.current.base + (performance.now() - clock.current.t0) / 1000;
-      setTime(Math.min(duration, t));
+      setTime(Math.min(durationRef.current, t));
       clock.current = null;
     }
     setPlaying(false);
-  }, [duration]);
+  }, []);
 
-  const seek = useCallback(
-    (t: number, andPlay?: boolean) => {
-      const tt = Math.max(0, Math.min(duration, t));
-      if (audio.current && !silent) audio.current.currentTime = tt;
-      setTime(tt);
-      timeRef.current = tt;
-      if (playing || andPlay) {
-        clock.current = { t0: performance.now(), base: tt };
-        if (!playing && andPlay) {
-          if (audio.current && !silent) audio.current.play().catch(() => setSilent(true));
-          setPlaying(true);
-        }
+  const seek = useCallback((t: number, andPlay?: boolean) => {
+    const tt = Math.max(0, Math.min(durationRef.current, t));
+    if (audio.current && !silentRef.current) audio.current.currentTime = tt;
+    setTime(tt);
+    timeRef.current = tt;
+    const isPlaying = playingRef.current;
+    if (isPlaying || andPlay) {
+      clock.current = { t0: performance.now(), base: tt };
+      if (!isPlaying && andPlay) {
+        if (audio.current && !silentRef.current) audio.current.play().catch(() => setSilent(true));
+        setPlaying(true);
       }
-    },
-    [duration, playing, silent],
-  );
+    }
+  }, []);
 
-  const toggle = useCallback(() => (playing ? pause() : play()), [playing, pause, play]);
+  const toggle = useCallback(() => (playingRef.current ? pause() : play()), [pause, play]);
 
   return useMemo(() => ({ time, duration, playing, silent, play, pause, toggle, seek }), [time, duration, playing, silent, play, pause, toggle, seek]);
 }

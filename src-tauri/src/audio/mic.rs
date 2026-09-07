@@ -20,11 +20,13 @@ pub const TARGET_RATE: u32 = 16000;
 /// Сколько ждать первого ответа устройства (включая системный запрос разрешения).
 pub const READY_TIMEOUT: Duration = Duration::from_secs(45);
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct MicTick {
     pub elapsed_sec: f64,
     pub level_db: f32,
     pub wpm_estimate: Option<f32>,
+    /// Поток микрофона оборвался (устройство отключено и т. п.): запись остановлена, WAV дописан.
+    pub error: Option<String>,
 }
 
 pub type TickFn = Box<dyn FnMut(MicTick) + Send>;
@@ -151,6 +153,7 @@ pub fn start(
     out_path: &Path,
     tick: TickFn,
     tick_interval: Duration,
+    lead_from: Option<Instant>,
 ) -> Result<MicHandle> {
     let wanted = device_id.map(str::to_string);
     let picker: DevicePicker = Box::new(move |host| {
@@ -160,15 +163,18 @@ pub fn start(
             .context("микрофон не отдаёт конфигурацию по умолчанию")?;
         Ok((device, config))
     });
-    start_with_picker(picker, out_path, tick, tick_interval)
+    start_with_picker(picker, out_path, tick, tick_interval, lead_from)
 }
 
 /// Общий запуск для микрофона и (на Windows) loopback-захвата.
+/// `lead_from` — момент старта другой дорожки (системного звука): в начало WAV дописывается
+/// тишина на разницу во времени, чтобы дорожки были выровнены по t=0.
 pub fn start_with_picker(
     picker: DevicePicker,
     out_path: &Path,
     mut tick: TickFn,
     tick_interval: Duration,
+    lead_from: Option<Instant>,
 ) -> Result<MicHandle> {
     let out_path: PathBuf = out_path.to_path_buf();
     if let Some(parent) = out_path.parent() {
@@ -233,24 +239,34 @@ pub fn start_with_picker(
 
             let mut pipe = Pipeline {
                 channels,
+                in_rate,
+                lead_from,
                 resampler: Resampler::new(in_rate, TARGET_RATE),
                 level: LevelMeter::new(TARGET_RATE),
                 tempo: TempoEstimator::new(TARGET_RATE),
                 written: 0,
                 shared: shared_t.clone(),
             };
+            shared_t.level_bits.store(crate::audio::level::MIN_DB.to_bits(), Ordering::Relaxed);
             let mut last_tick = Instant::now();
             let mut last_flush = Instant::now();
+            let mut failure: Option<String> = None;
 
             loop {
                 if stop_t.load(Ordering::SeqCst) {
+                    break;
+                }
+                // ошибка потока cpal (устройство отключено, смена частоты) — фиксируем и завершаем
+                if let Some(e) = lock(&shared_t.error).clone() {
+                    failure = Some(e);
                     break;
                 }
                 match rx.recv_timeout(Duration::from_millis(50)) {
                     Ok(chunk) => pipe.consume(&chunk, &mut writer)?,
                     Err(mpsc::RecvTimeoutError::Timeout) => {}
                     Err(mpsc::RecvTimeoutError::Disconnected) => {
-                        *lock(&shared_t.error) = Some("поток микрофона закрылся".into());
+                        failure = Some("поток микрофона закрылся".into());
+                        *lock(&shared_t.error) = failure.clone();
                         break;
                     }
                 }
@@ -264,6 +280,7 @@ pub fn start_with_picker(
                         elapsed_sec: pipe.written as f64 / TARGET_RATE as f64,
                         level_db: db,
                         wpm_estimate: wpm,
+                        error: None,
                     });
                 }
                 if last_flush.elapsed() >= Duration::from_secs(5) {
@@ -278,7 +295,18 @@ pub fn start_with_picker(
             let tail = pipe.resampler.flush();
             pipe.write_out(&tail, &mut writer)?;
             writer.finalize()?;
-            Ok(pipe.written as f64 / TARGET_RATE as f64)
+            let duration = pipe.written as f64 / TARGET_RATE as f64;
+            if let Some(msg) = failure {
+                let text = format!("Микрофон перестал отдавать звук ({msg}) — запись остановлена, записанное сохранено");
+                tick(MicTick {
+                    elapsed_sec: duration,
+                    level_db: crate::audio::level::MIN_DB,
+                    wpm_estimate: None,
+                    error: Some(text.clone()),
+                });
+                return Err(anyhow!(text));
+            }
+            Ok(duration)
         })?;
 
     // На macOS первый доступ к микрофону блокируется до ответа на системный запрос (TCC),
@@ -309,6 +337,9 @@ type WavOut = hound::WavWriter<std::io::BufWriter<std::fs::File>>;
 /// Обработка на потоке записи: downmix → ресемплинг → уровень/темп → WAV.
 struct Pipeline {
     channels: usize,
+    in_rate: u32,
+    /// Пока Some — ждём первого чанка, чтобы дописать ведущую тишину (выравнивание с системной дорожкой).
+    lead_from: Option<Instant>,
     resampler: Resampler,
     level: LevelMeter,
     tempo: TempoEstimator,
@@ -318,6 +349,17 @@ struct Pipeline {
 
 impl Pipeline {
     fn consume(&mut self, chunk: &[f32], writer: &mut WavOut) -> Result<()> {
+        if let Some(t0) = self.lead_from.take() {
+            // первый чанк: его начало = сейчас − длительность чанка; всё до этого — тишина
+            let chunk_sec = (chunk.len() / self.channels.max(1)) as f64 / self.in_rate.max(1) as f64;
+            let offset = Instant::now().saturating_duration_since(t0).as_secs_f64() - chunk_sec;
+            if offset > 0.02 {
+                let n = (offset.min(600.0) * TARGET_RATE as f64).round() as usize;
+                log::info!("выравнивание дорожек: микрофон стартовал на {offset:.3} с позже — дописываю тишину");
+                let zeros = vec![0.0f32; n];
+                self.write_out(&zeros, writer)?;
+            }
+        }
         let mono = downmix(chunk, self.channels);
         let out = self.resampler.process(&mono);
         self.level.push(&out);

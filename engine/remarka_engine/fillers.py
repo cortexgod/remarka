@@ -98,7 +98,7 @@ def speech_intensity_median_db(samples: np.ndarray, sr: int, mic_speech: list[Sp
     for s in mic_speech:
         mask |= (ts >= s.start) & (ts <= s.end)
     vals = vals[mask]
-    vals = vals[np.isfinite(vals)]
+    vals = vals[np.isfinite(vals) & (vals > -100.0)]
     if vals.size == 0:
         return None
     return float(np.median(vals))

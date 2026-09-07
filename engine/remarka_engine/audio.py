@@ -26,7 +26,14 @@ class Track:
 
     @property
     def is_silent(self) -> bool:
-        return self.duration_sec <= 0 or self.rms_dbfs < SILENCE_DBFS
+        # По активной части, а не по RMS всей записи: тихий участник, который
+        # говорит 10 % времени, иначе считался бы «тишиной».
+        return self.duration_sec <= 0 or self.active_dbfs < SILENCE_DBFS
+
+    @property
+    def active_dbfs(self) -> float:
+        """95-й перцентиль RMS по 100-мс кадрам — уровень самых громких участков."""
+        return frame_percentile_dbfs(self.samples, self.sample_rate)
 
     @property
     def is_short(self) -> bool:
@@ -54,6 +61,18 @@ def dbfs(x: np.ndarray) -> float:
     if rms <= 1e-9:
         return -120.0
     return 20.0 * math.log10(rms)
+
+
+def frame_percentile_dbfs(x: np.ndarray, sr: int, frame_sec: float = 0.1, pct: float = 95.0) -> float:
+    """Перцентиль RMS-уровня по кадрам (дБFS): устойчивая оценка «громкости речи»."""
+    n = int(frame_sec * sr)
+    if x.size < n or n <= 0:
+        return dbfs(x)
+    m = (x.size // n) * n
+    frames = x[:m].astype(np.float64).reshape(-1, n)
+    rms = np.sqrt(np.mean(np.square(frames), axis=1))
+    rms = np.maximum(rms, 1e-9)
+    return float(np.percentile(20.0 * np.log10(rms), pct))
 
 
 def peak_dbfs(x: np.ndarray) -> float:

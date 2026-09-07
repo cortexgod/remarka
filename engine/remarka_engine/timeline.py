@@ -108,7 +108,7 @@ def build(
             m = (frames.pitch_t >= a) & (frames.pitch_t < b) & frames.pitch_mine & (frames.f0 > 0)
             if np.count_nonzero(m) >= 5 and frames.speaker_median_st is not None:
                 res.pitch_semitones.append(TimePoint(win.center, float(np.median(st(frames.f0[m])) - frames.speaker_median_st)))
-            mi = (frames.int_t >= a) & (frames.int_t < b) & frames.int_mine & np.isfinite(frames.db)
+            mi = (frames.int_t >= a) & (frames.int_t < b) & frames.int_mine & np.isfinite(frames.db) & (frames.db > -100.0)
             if np.count_nonzero(mi) >= 5:
                 res.loudness_db.append(TimePoint(win.center, float(np.mean(frames.db[mi]))))
         if ref_high_wpm is not None and win.n_words >= MIN_WORDS_FOR_MEDIAN and win.wpm > ref_high_wpm * FAST_BURST_FACTOR:

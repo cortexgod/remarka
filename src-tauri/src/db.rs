@@ -239,8 +239,13 @@ impl Db {
         meeting_type: Option<MeetingType>,
     ) -> Result<()> {
         if let Some(t) = title {
-            self.conn
-                .execute("UPDATE meetings SET title = ?2 WHERE id = ?1", params![id, t])?;
+            // пустое название — NULL, а не пустая строка (иначе карточка теряет подпись)
+            let t = t.trim();
+            if t.is_empty() {
+                self.conn.execute("UPDATE meetings SET title = NULL WHERE id = ?1", params![id])?;
+            } else {
+                self.conn.execute("UPDATE meetings SET title = ?2 WHERE id = ?1", params![id, t])?;
+            }
         }
         if let Some(mt) = meeting_type {
             self.conn.execute(
@@ -255,6 +260,12 @@ impl Db {
         self.conn
             .execute("DELETE FROM meetings WHERE id = ?1", params![id])?;
         Ok(())
+    }
+
+    pub fn ids_with_status(&self, status: &str) -> Result<Vec<String>> {
+        let mut st = self.conn.prepare("SELECT id FROM meetings WHERE status = ?1")?;
+        let rows = st.query_map(params![status], |r| r.get::<_, String>(0))?;
+        Ok(rows.filter_map(|r| r.ok()).collect())
     }
 
     /// После падения: встречи в статусе recording/analyzing → recorded (анализ можно перезапустить).

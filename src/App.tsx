@@ -1,4 +1,4 @@
-import { HashRouter, NavLink, Route, Routes, useLocation } from "react-router-dom";
+import { HashRouter, NavLink, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { useEffect } from "react";
 import { StoreProvider, useStore } from "./lib/store";
 import { isTauri } from "./lib/api";
@@ -89,7 +89,7 @@ function Shell() {
         <ScrollTop />
         <Routes>
           <Route path="/" element={<Feed />} />
-          <Route path="/meeting/:id" element={<Meeting />} />
+          <Route path="/meeting/:id" element={<MeetingRoute />} />
           <Route path="/progress" element={<Progress />} />
           <Route path="/training" element={<Training />} />
           <Route path="/prepare" element={<Prepare />} />
@@ -113,6 +113,12 @@ function Root() {
       <Route path="*" element={<Shell />} />
     </Routes>
   );
+}
+
+/** Размонтировать экран разбора при смене id — иначе под новым заголовком мелькает старый отчёт. */
+function MeetingRoute() {
+  const { id = "" } = useParams();
+  return <Meeting key={id} />;
 }
 
 export default function App() {

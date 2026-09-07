@@ -26,18 +26,29 @@ KNOWN_MODELS = ["large-v3-turbo", "large-v3", "medium", "small", "base"]
 _EXTRA_REPOS: dict[str, str] = {}
 
 # Типичные галлюцинации Whisper на тишине/шуме (русские субтитровые хвосты).
+# Только целые типовые фразы: одиночные слова вроде «субтитры» или «корректор»
+# встречаются и в живой речи, поэтому фильтр применяется лишь к подозрительным
+# сегментам (см. _suspicious).
 HALLUCINATION_PHRASES = (
     "редактор субтитров",
-    "субтитры",
-    "субтитров",
-    "корректор",
+    "субтитры сделал",
+    "субтитры создавал",
+    "субтитры подготовил",
+    "корректор а.егорова",
     "продолжение следует",
     "спасибо за просмотр",
-    "подписывайтесь",
+    "подписывайтесь на канал",
     "dimatorzok",
     "закомолдина",
-    "subtitles",
+    "subtitles by",
 )
+
+# Транскрибируем по кускам речи (по своему VAD): промпт дословности действует
+# в каждом окне (иначе faster-whisper сбрасывает его после первого окна при
+# condition_on_previous_text=False), а тишина не декодируется вовсе.
+CHUNK_MAX_SEC = 28.0
+CHUNK_MERGE_GAP_SEC = 1.0
+CHUNK_PAD_SEC = 0.25
 
 
 def resolve_repo(name: str) -> str:
@@ -123,6 +134,49 @@ def _looks_hallucinated(segment_text: str) -> bool:
     return any(p in t for p in HALLUCINATION_PHRASES)
 
 
+def _suspicious(seg: Any, seg_start: float, seg_end: float, speech_spans: list[Span] | None) -> bool:
+    """Сегмент подозрителен, если плохо покрыт речью по VAD или сам Whisper в нём не уверен."""
+    if speech_spans is not None and seg_end > seg_start:
+        ov = overlap_duration(Span(seg_start, seg_end), speech_spans)
+        if ov < 0.5 * (seg_end - seg_start):
+            return True
+    nsp = getattr(seg, "no_speech_prob", None)
+    alp = getattr(seg, "avg_logprob", None)
+    cr = getattr(seg, "compression_ratio", None)
+    if nsp is not None and nsp > 0.6:
+        return True
+    if alp is not None and alp < -1.0:
+        return True
+    if cr is not None and cr > 2.4:
+        return True
+    return False
+
+
+def speech_chunks(speech_spans: list[Span], total_sec: float) -> list[Span]:
+    """Куски для транскрипции: речь по VAD, слитая через зазоры < 1 с, не длиннее 28 с, с запасом по краям."""
+    chunks: list[Span] = []
+    cur: Span | None = None
+    for s in sorted(speech_spans, key=lambda x: x.start):
+        if cur is not None and s.start - cur.end < CHUNK_MERGE_GAP_SEC and s.end - cur.start <= CHUNK_MAX_SEC:
+            cur = Span(cur.start, max(cur.end, s.end))
+            continue
+        if cur is not None:
+            chunks.append(cur)
+        cur = Span(s.start, s.end)
+    if cur is not None:
+        chunks.append(cur)
+    out: list[Span] = []
+    for c in chunks:
+        # слишком длинный непрерывный кусок режем на равные части ≤ 28 с
+        n = max(1, int(np.ceil(c.duration / CHUNK_MAX_SEC)))
+        step = c.duration / n
+        for i in range(n):
+            a = c.start + i * step
+            b = c.start + (i + 1) * step if i < n - 1 else c.end
+            out.append(Span(max(0.0, a - CHUNK_PAD_SEC), min(total_sec, b + CHUNK_PAD_SEC)))
+    return out
+
+
 def transcribe(
     model: Any,
     samples: np.ndarray,
@@ -132,47 +186,71 @@ def transcribe(
     speech_spans: list[Span] | None = None,
     on_progress: Callable[[float], None] | None = None,
     beam_size: int = 5,
+    sample_rate: int = 16000,
 ) -> tuple[list[RawWord], list[str]]:
     """Возвращает слова с таймкодами и список предупреждений.
 
-    Прогресс отдаётся по мере обработки сегментов (генератор faster-whisper).
-    Слова вне речи по VAD и сегменты-галлюцинации отбрасываются.
+    Если переданы отрезки речи по VAD, дорожка транскрибируется по кускам речи
+    (промпт дословности в каждом окне, тишина не декодируется). Прогресс — по
+    мере обработки кусков/сегментов. Слова вне речи по VAD и подозрительные
+    сегменты-галлюцинации отбрасываются.
     """
     warnings: list[str] = []
     if samples.size == 0:
         return [], warnings
-    segments, _info = model.transcribe(
-        samples.astype(np.float32),
+    total_sec = samples.size / float(sample_rate)
+    if speech_spans is not None:
+        chunks = speech_chunks(speech_spans, total_sec)
+        if not chunks:
+            return [], warnings
+    else:
+        chunks = [Span(0.0, total_sec)]
+
+    words: list[RawWord] = []
+    dropped_vad = 0
+    dropped_halluc = 0
+    kwargs = dict(
         language=language,
         beam_size=beam_size,
-        temperature=0.0,
+        temperature=(0.0, 0.2, 0.4),
+        compression_ratio_threshold=2.4,
         word_timestamps=True,
         condition_on_previous_text=False,
         vad_filter=False,
         initial_prompt=initial_prompt,
         no_speech_threshold=0.6,
     )
-    words: list[RawWord] = []
-    dropped_vad = 0
-    dropped_halluc = 0
-    for seg in segments:
+    for ch in chunks:
+        a = int(round(ch.start * sample_rate))
+        b = int(round(ch.end * sample_rate))
+        piece = samples[a:b].astype(np.float32)
+        if piece.size < int(0.1 * sample_rate):
+            continue
+        segments, _info = model.transcribe(piece, **kwargs)
+        for seg in segments:
+            seg_start = ch.start + float(seg.start)
+            seg_end = ch.start + float(seg.end)
+            if on_progress is not None:
+                on_progress(min(total_sec, seg_end))
+            if _suspicious(seg, seg_start, seg_end, speech_spans) and (
+                _looks_hallucinated(seg.text or "")
+                or ((seg.no_speech_prob or 0) > 0.85 and (seg.avg_logprob or 0) < -1.0)
+            ):
+                dropped_halluc += len(seg.words or [])
+                continue
+            for rw in _merge_tokens(seg.words or []):
+                rw.start += ch.start
+                rw.end += ch.start
+                if rw.end <= rw.start:
+                    rw.end = rw.start + 0.02
+                if speech_spans is not None:
+                    ov = overlap_duration(Span(rw.start - 0.15, rw.end + 0.15), speech_spans)
+                    if ov <= 0.0:
+                        dropped_vad += 1
+                        continue
+                words.append(rw)
         if on_progress is not None:
-            on_progress(float(seg.end))
-        if _looks_hallucinated(seg.text or ""):
-            dropped_halluc += len(seg.words or [])
-            continue
-        if seg.no_speech_prob is not None and seg.no_speech_prob > 0.85 and (seg.avg_logprob or 0) < -1.0:
-            dropped_halluc += len(seg.words or [])
-            continue
-        for rw in _merge_tokens(seg.words or []):
-            if rw.end <= rw.start:
-                rw.end = rw.start + 0.02
-            if speech_spans is not None:
-                ov = overlap_duration(Span(rw.start - 0.15, rw.end + 0.15), speech_spans)
-                if ov <= 0.0:
-                    dropped_vad += 1
-                    continue
-            words.append(rw)
+            on_progress(min(total_sec, ch.end))
     if dropped_vad:
         warnings.append(f"ASR: отброшено {dropped_vad} слов вне речи по VAD (вероятные галлюцинации)")
     if dropped_halluc:

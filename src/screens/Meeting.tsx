@@ -116,7 +116,7 @@ function ReportView({ report, card, src, onChanged, onDeleted }: { report: Repor
       player.seek(t, andPlay);
       setSeekSerial((s) => s + 1);
     },
-    [player],
+    [player.seek],
   );
 
   // пробел — play/pause
@@ -130,7 +130,7 @@ function ReportView({ report, card, src, onChanged, onDeleted }: { report: Repor
     };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
-  }, [player]);
+  }, [player.toggle]);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
@@ -139,7 +139,7 @@ function ReportView({ report, card, src, onChanged, onDeleted }: { report: Repor
   }, [report]);
 
   const changeType = async (t: MeetingType) => {
-    await run(api.updateMeeting(card.id, null, t), "Тип встречи обновлён");
+    await run(api.updateMeeting(card.id, null, t), "Тип встречи обновлён: ориентиры и оценка пересчитаны");
     onChanged();
   };
   const saveTitle = async () => {

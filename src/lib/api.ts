@@ -15,6 +15,7 @@ import type {
   EvMeetingApp,
   EvRecordingStarted,
   EvRecordingStopped,
+  EvRecordingWarning,
   EvRecordingTick,
   ImportAudioOpts,
   MeetingCard,
@@ -55,6 +56,7 @@ export interface EventPayloads {
   "recording:started": EvRecordingStarted;
   "recording:tick": EvRecordingTick;
   "recording:stopped": EvRecordingStopped;
+  "recording:warning": EvRecordingWarning;
   "analysis:progress": EvAnalysisProgress;
   "analysis:done": EvAnalysisDone;
   "analysis:error": EvAnalysisError;

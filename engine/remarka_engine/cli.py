@@ -6,6 +6,8 @@ stdout — только JSON lines. Всё остальное (логи библ
 from __future__ import annotations
 
 import argparse
+import json
+import subprocess
 import importlib
 import os
 import shutil
@@ -49,6 +51,14 @@ def build_parser() -> argparse.ArgumentParser:
     b.add_argument("--reports", nargs="+", required=True)
     b.add_argument("--out", required=True)
 
+    rs = sub.add_parser("rescore", help="пересчёт готового отчёта под другой тип встречи (без ASR)")
+    rs.add_argument("--report", required=True)
+    rs.add_argument("--meeting-type", required=True)
+    rs.add_argument("--baseline", default=None)
+    rs.add_argument("--calibration-meetings", type=int, default=0)
+    rs.add_argument("--type-source", default="user", choices=["user", "llm", "default"])
+    rs.add_argument("--out", default=None, help="куда писать (по умолчанию — поверх --report)")
+
     pt = sub.add_parser("patterns", help="межвстречные инсайты (модуль patterns агента «meaning»)")
     pt.add_argument("--reports", nargs="+", required=True)
     pt.add_argument("--out", required=True)
@@ -77,12 +87,20 @@ def llm_available(backend: str) -> tuple[bool, str]:
         fn = getattr(mod, "is_available", None)
         if callable(fn):
             res = fn(backend)
-            if isinstance(res, tuple):
-                return bool(res[0]), str(res[1]) if len(res) > 1 else ""
-            return bool(res), ""
+            ok, msg = (bool(res[0]), str(res[1]) if len(res) > 1 else "") if isinstance(res, tuple) else (bool(res), "")
+            if ok and backend == "claude_cli":
+                path = mod.find_cli() if callable(getattr(mod, "find_cli", None)) else shutil.which("claude")
+                if path and _cli_logged_in(path) is False:
+                    return False, "claude CLI найден, но не авторизован: выполните `claude login` в терминале"
+            return ok, msg
         if backend == "claude_cli" and callable(getattr(mod, "find_cli", None)):
             path = mod.find_cli()
-            return (path is not None), (f"claude CLI: {path}" if path else "claude CLI не найден в PATH")
+            if path is None:
+                return False, "claude CLI не найден в PATH"
+            logged = _cli_logged_in(path)
+            if logged is False:
+                return False, "claude CLI найден, но не авторизован: выполните `claude login` в терминале"
+            return True, f"claude CLI: {path}" + ("" if logged else " (статус авторизации не проверен)")
         if backend == "anthropic_api" and callable(getattr(mod, "has_api_credentials", None)):
             ok = bool(mod.has_api_credentials())
             return ok, ("ключ Anthropic API задан" if ok else "нет ANTHROPIC_API_KEY")
@@ -92,7 +110,11 @@ def llm_available(backend: str) -> tuple[bool, str]:
         return False, f"llm: {e}"
     if backend == "claude_cli":
         path = shutil.which("claude")
-        return (path is not None), (f"claude CLI: {path}" if path else "claude CLI не найден в PATH")
+        if path is None:
+            return False, "claude CLI не найден в PATH"
+        if _cli_logged_in(path) is False:
+            return False, "claude CLI найден, но не авторизован: выполните `claude login` в терминале"
+        return True, f"claude CLI: {path}"
     if backend == "anthropic_api":
         has_key = bool(os.environ.get("ANTHROPIC_API_KEY"))
         try:
@@ -198,6 +220,9 @@ def cmd_baseline(args: argparse.Namespace, em: Emitter) -> int:
         em.error("Нет ни одного читаемого отчёта для базы", "metrics")
         return 1
     doc = build_baseline(reports)
+    if not doc.get("stats"):
+        em.error("Недостаточно данных для базы: ни одной метрики со значениями", "metrics")
+        return 1
     errs = validate(doc, "baseline")
     if errs:
         em.error("baseline не по схеме: " + errs[0], "write")
@@ -205,6 +230,51 @@ def cmd_baseline(args: argparse.Namespace, em: Emitter) -> int:
     out = write_json(doc, args.out)
     em.done(out)
     return 0
+
+
+def cmd_rescore(args: argparse.Namespace, em: Emitter) -> int:
+    from .report import read_json, sanitize, validate, write_json
+    from .rescore import rescore
+
+    em.progress("metrics", 0.0, "Пересчёт под тип встречи")
+    try:
+        doc = read_json(args.report)
+    except Exception as e:  # noqa: BLE001
+        em.error(f"Отчёт не прочитан: {e}", "load")
+        return 1
+    baseline_doc = None
+    if args.baseline:
+        try:
+            baseline_doc = read_json(args.baseline)
+            if validate(baseline_doc, "baseline"):
+                baseline_doc = None
+        except Exception as e:  # noqa: BLE001
+            em.log("warn", f"baseline не прочитан: {e}")
+    try:
+        doc = sanitize(rescore(doc, args.meeting_type, baseline_doc=baseline_doc, calibration_meetings=args.calibration_meetings, type_source=args.type_source))
+    except Exception as e:  # noqa: BLE001
+        em.error(f"Пересчёт не удался: {e}", "metrics")
+        return 1
+    errs = validate(doc, "report")
+    if errs:
+        em.error("Отчёт после пересчёта не по схеме: " + errs[0], "write")
+        return 1
+    out = write_json(doc, args.out or args.report)
+    em.progress("write", 1.0, f"Оценка: {doc['score']['overall']}")
+    em.done(out)
+    return 0
+
+
+def _cli_logged_in(path: str) -> bool | None:
+    """True/False по `claude auth status`, None — не удалось проверить."""
+    try:
+        proc = subprocess.run([path, "auth", "status"], capture_output=True, text=True, timeout=8)
+        data = json.loads(proc.stdout or "{}")
+        if isinstance(data, dict) and "loggedIn" in data:
+            return bool(data["loggedIn"])
+    except Exception:  # noqa: BLE001
+        return None
+    return None
 
 
 def _meaning_module(name: str, em: Emitter) -> Any | None:
@@ -298,6 +368,7 @@ def main(argv: list[str] | None = None) -> int:
     handlers = {
         "analyze": cmd_analyze,
         "baseline": cmd_baseline,
+        "rescore": cmd_rescore,
         "patterns": cmd_patterns,
         "prepare": cmd_prepare,
         "doctor": cmd_doctor,

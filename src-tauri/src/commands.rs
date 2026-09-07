@@ -141,12 +141,18 @@ fn start_recording_inner(app: &AppHandle, opts: StartRecordingOpts) -> CmdResult
     std::fs::create_dir_all(&dir).map_err(err)?;
 
     // устройства открываем, не держа мьютекс recorder: старт может ждать системный запрос разрешения
+    let max_duration_sec = training_task_id
+        .as_deref()
+        .and_then(|tid| load_training_tasks(&settings).into_iter().find(|t| t.id == tid))
+        .map(|t| t.duration_sec)
+        .filter(|d| *d > 0.0);
     let params = StartParams {
         meeting_id: meeting_id.clone(),
         started_at: started_at.clone(),
         mic_path: paths.mic_wav(&meeting_id),
         system_path: system_wanted.then(|| paths.system_wav(&meeting_id)),
         input_device: opts.input_device.clone().or(settings.input_device.clone()),
+        max_duration_sec,
     };
     let rec = match audio::start_recording(app, params) {
         Ok(r) => r,
@@ -246,6 +252,13 @@ pub fn do_stop_recording(app: &AppHandle) -> CmdResult<String> {
             emit_meetings_changed(app);
             set_overlay(app, false);
             crate::tray::update(app);
+            // записанное до обрыва разбираем как обычно
+            if dur > 0.5 && settings.auto_analyze {
+                let _ = engine::enqueue(
+                    app,
+                    AnalyzeJob { meeting_id: meeting_id.clone(), llm: settings.llm_backend != LlmBackend::None },
+                );
+            }
             return Err(msg);
         }
     };
@@ -317,6 +330,7 @@ pub fn tray_toggle_recording(app: &AppHandle) {
 
 /// Перед выходом: корректно закрыть WAV, если шла запись (без анализа).
 pub fn shutdown(app: &AppHandle) {
+    engine::shutdown(app);
     let Some(state) = app.try_state::<AppState>() else {
         return;
     };
@@ -447,17 +461,23 @@ pub fn update_meeting(
     meeting_type: Option<MeetingType>,
 ) -> CmdResult<MeetingCard> {
     check_id(&id)?;
-    let card = {
+    let rescore_type = {
         let db = lock(&state.db);
-        if db.get(&id).map_err(err)?.is_none() {
+        let Some(row) = db.get(&id).map_err(err)? else {
             return Err("Встреча не найдена".to_string());
-        }
+        };
         db.update_meta(&id, title.as_deref().map(str::trim), meeting_type)
             .map_err(err)?;
-        db.card(&id)
-            .map_err(err)?
-            .ok_or_else(|| "Встреча не найдена".to_string())?
+        // тип изменился у готовой встречи → ориентиры, статусы и оценка в отчёте пересчитываются движком
+        meeting_type.filter(|t| row.status == MeetingStatus::Ready && (*t != row.meeting_type || row.type_source != TypeSource::User))
     };
+    if let Some(t) = rescore_type {
+        engine::rescore(&app, &id, t).map_err(|e| format!("Тип сохранён, но пересчитать отчёт не удалось: {e:#}"))?;
+    }
+    let card = lock(&state.db)
+        .card(&id)
+        .map_err(err)?
+        .ok_or_else(|| "Встреча не найдена".to_string())?;
     emit_meetings_changed(&app);
     Ok(card)
 }
@@ -551,18 +571,22 @@ pub const TRAINING_TASKS_JSON: &str = include_str!("../resources/training_tasks.
 
 #[tauri::command(rename_all = "snake_case")]
 pub fn list_training_tasks(state: State<'_, AppState>) -> CmdResult<Vec<TrainingTask>> {
-    let settings = state.settings();
-    if let Some(dir) = engine::engine_data_dir(&settings) {
+    Ok(load_training_tasks(&state.settings()))
+}
+
+/// Задания тренажёра: из data/training_tasks.json движка, иначе — встроенная копия.
+pub fn load_training_tasks(settings: &Settings) -> Vec<TrainingTask> {
+    if let Some(dir) = engine::engine_data_dir(settings) {
         let p = dir.join("training_tasks.json");
         if let Ok(text) = std::fs::read_to_string(&p) {
             match serde_json::from_str::<Vec<TrainingTask>>(&text) {
-                Ok(tasks) if !tasks.is_empty() => return Ok(tasks),
+                Ok(tasks) if !tasks.is_empty() => return tasks,
                 Ok(_) => {}
                 Err(e) => log::warn!("{}: {e}", p.display()),
             }
         }
     }
-    serde_json::from_str(TRAINING_TASKS_JSON).map_err(err)
+    serde_json::from_str(TRAINING_TASKS_JSON).unwrap_or_default()
 }
 
 #[tauri::command(rename_all = "snake_case")]

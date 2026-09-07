@@ -304,7 +304,12 @@ pub fn run_streaming<F: FnMut(&EngineEvent)>(
         .open(opts.stderr_log)
         .with_context(|| format!("не удалось открыть {}", opts.stderr_log.display()))?;
     cmd.stdout(Stdio::piped()).stderr(Stdio::from(log));
-    log::info!("engine: {:?}", cmd);
+    // только программа и аргументы: Debug у Command печатает и переменные окружения (ключ API)
+    log::info!(
+        "engine: {:?} {}",
+        cmd.get_program(),
+        cmd.get_args().map(|a| a.to_string_lossy().to_string()).collect::<Vec<_>>().join(" ")
+    );
     let mut child = cmd
         .spawn()
         .with_context(|| format!("не удалось запустить движок {:?}", cmd.get_program()))?;
@@ -476,6 +481,7 @@ fn worker(app: AppHandle) {
 }
 
 fn fail_meeting(app: &AppHandle, meeting_id: &str, message: &str) {
+    crate::util::notify(app, "Ремарка: разбор не удался", message);
     let state = app.state::<AppState>();
     let exists = lock(&state.db)
         .get(meeting_id)
@@ -603,6 +609,14 @@ fn run_analysis(app: &AppHandle, job: &AnalyzeJob, pid_slot: &Arc<Mutex<Option<u
             },
         );
         emit_meetings_changed(app);
+        {
+            let title = row.title.clone().unwrap_or_else(|| "встреча".to_string());
+            let body = match summary.score {
+                Some(s) => format!("{title} · оценка {}", s.round() as i64),
+                None => title,
+            };
+            crate::util::notify(app, "Ремарка: разбор готов", &body);
+        }
         match maybe_build_baseline(app) {
             Ok(true) => log::info!("baseline.json построен"),
             Ok(false) => {}
@@ -614,6 +628,73 @@ fn run_analysis(app: &AppHandle, job: &AnalyzeJob, pid_slot: &Arc<Mutex<Option<u
         fail_meeting(app, &id, &msg);
         Ok(())
     }
+}
+
+/// При выходе из приложения: снять очередь и остановить запущенный движок,
+/// чтобы осиротевший python не грузил процессор после закрытия Ремарки.
+pub fn shutdown(app: &AppHandle) {
+    let Some(state) = app.try_state::<AppState>() else {
+        return;
+    };
+    let running = {
+        let mut q = lock(&state.engine);
+        q.pending.clear();
+        q.running.as_ref().and_then(|(_, pid)| *lock(pid))
+    };
+    if let Some(pid) = running {
+        log::info!("выход: останавливаю движок (pid {pid})");
+        terminate_pid(pid);
+        let t = std::time::Instant::now();
+        while t.elapsed() < Duration::from_secs(3) {
+            // ESRCH (процесс исчез) — kill(pid, 0) вернёт -1
+            if unsafe { libc::kill(pid as libc::pid_t, 0) } != 0 {
+                return;
+            }
+            std::thread::sleep(Duration::from_millis(50));
+        }
+        unsafe {
+            libc::kill(pid as libc::pid_t, libc::SIGKILL);
+        }
+    }
+}
+
+/// Пересчёт готового отчёта под другой тип встречи (без повторного распознавания): `rescore`.
+pub fn rescore(app: &AppHandle, meeting_id: &str, meeting_type: MeetingType) -> Result<()> {
+    let state = app.state::<AppState>();
+    let paths = state.paths.clone();
+    let settings = state.settings();
+    let launcher = find_launcher(&settings).ok_or_else(|| anyhow!("Python движка не найден"))?;
+    let report_path = paths.report_json(meeting_id);
+    if !report_path.is_file() {
+        anyhow::bail!("Отчёт ещё не построен");
+    }
+    let mut cmd = launcher.command(&settings, &paths.data_dir);
+    cmd.arg("rescore")
+        .arg("--report")
+        .arg(&report_path)
+        .arg("--meeting-type")
+        .arg(meeting_type.as_str())
+        .arg("--type-source")
+        .arg("user");
+    let baseline = paths.baseline_path();
+    if baseline.is_file() {
+        cmd.arg("--baseline").arg(&baseline);
+    } else {
+        let ready = lock(&state.db).count_ready_non_training().unwrap_or(0);
+        cmd.arg("--calibration-meetings").arg(ready.to_string());
+    }
+    let log_path = paths.engine_log(meeting_id);
+    let outcome = run_streaming(
+        cmd,
+        RunOptions { stderr_log: &log_path, append_log: true, timeout: Some(Duration::from_secs(60)), pid_slot: None },
+        |_| {},
+    )?;
+    if !outcome.succeeded() {
+        anyhow::bail!("{}", outcome.failure_message(&log_path));
+    }
+    let report = read_json(&report_path)?;
+    lock(&state.db).apply_report(meeting_id, &summarize_report(&report))?;
+    Ok(())
 }
 
 /// Снимает задачу с очереди или посылает SIGTERM запущенному анализу.

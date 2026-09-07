@@ -142,7 +142,9 @@ def find_pauses(words: list[Word], system_speech: list[Span] | None = None) -> l
             ov = overlap_duration(span, system_speech)
             if ov > max(0.1, 0.2 * gap):
                 continue
-        boundary = is_thought_boundary(a.text, b.text)
+        # Граница мысли — пунктуация ИЛИ граница предложения, выставленная сегментером
+        # (без пунктуации ASR предложения режутся по паузам ≥ 0,8 с).
+        boundary = is_thought_boundary(a.text, b.text) or a.sentence_i != b.sentence_i
         if gap >= STRUCTURAL_MIN and boundary:
             kind, label = "structural_pause", fmt_sec(gap)
         elif gap >= STRUCTURAL_MIN:

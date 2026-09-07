@@ -55,9 +55,22 @@ export function Kpis({ report }: { report: Report }) {
 export function ThreeThings({ report, onSeek }: { report: Report; onSeek: Seek }) {
   const mean = report.meaning;
   if (!mean) {
+    const reason = report.engine.warnings.find((w) => w.startsWith("Слой смысла"));
+    const needLogin = !!reason && /not logged in|не авторизован|\/login/i.test(reason);
     return (
       <div className="note soft">
-        <p>Слой смысла выключен (LLM: none) — правки с цитатами не строились. Включить можно в настройках.</p>
+        {reason ? (
+          <>
+            <p>{reason.replace(/Not logged in · Please run \/login/i, "claude CLI не авторизован")}</p>
+            <p className="muted">
+              {needLogin
+                ? "Выполните в терминале команду claude login, затем нажмите «Пересчитать» — появятся три правки с цитатами, конспект и ответы на вопросы."
+                : "Проверьте настройки слоя смысла (бэкенд, ключ) и нажмите «Пересчитать»."}
+            </p>
+          </>
+        ) : (
+          <p>Слой смысла выключен в настройках — правки с цитатами, конспект и оценка ответов не строились.</p>
+        )}
       </div>
     );
   }
@@ -213,6 +226,27 @@ export function Questions({ report, onSeek }: { report: Report; onSeek: Seek }) 
   const mean = report.meaning;
   const qs = mean?.questions ?? [];
   if (!qs.length) {
+    // без слоя смысла показываем вопросы, найденные движком по системной дорожке
+    const evq = report.events.filter((e) => e.kind === "question_from_other");
+    if (evq.length) {
+      return (
+        <div className="qa">
+          {evq.map((e, i) => {
+            const utt = report.transcript.other.find((o) => Math.abs(o.start - e.t) < 0.35) ?? null;
+            return (
+              <div key={i} className="q">
+                <div className="q-head">
+                  <button className="tc" onClick={() => onSeek(e.t, true)}>{fmtTime(e.t)}</button>
+                  <span className="tag">вопрос собеседника</span>
+                </div>
+                <p className="q-asked">{utt?.text ?? e.label}</p>
+              </div>
+            );
+          })}
+          <p className="hint">Оценка ответов (по теме / частично / ушёл в сторону) появится вместе со слоем смысла.</p>
+        </div>
+      );
+    }
     return (
       <p className="hint">
         {report.meeting.has_system_track ? "Вопросов собеседника не найдено." : "Без системной дорожки вопросы собеседника не распознаются."}

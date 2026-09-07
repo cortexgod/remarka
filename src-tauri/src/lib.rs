@@ -26,6 +26,7 @@ pub fn run() {
 
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_notification::init())
         .setup(|app| {
             let data_dir = app.path().app_data_dir()?;
             let paths = paths::Paths::new(data_dir)?;
@@ -34,6 +35,21 @@ pub fn run() {
                 let _ = settings::save(&paths.settings_path(), &settings);
             }
             let db = db::Db::open(&paths.db_path())?;
+            // Разбор, прерванный выходом из приложения, мог успеть записать report.json — тогда встреча готова.
+            for id in db.ids_with_status("analyzing").unwrap_or_default() {
+                let report = paths.report_json(&id);
+                let mic = paths.mic_wav(&id);
+                let fresh = match (std::fs::metadata(&report), std::fs::metadata(&mic)) {
+                    (Ok(r), Ok(m)) => r.modified().ok() >= m.modified().ok(),
+                    _ => false,
+                };
+                if fresh {
+                    if let Ok(doc) = engine::read_json(&report) {
+                        let _ = db.apply_report(&id, &engine::summarize_report(&doc));
+                        log::info!("встреча {id}: отчёт был дописан до выхода — помечена готовой");
+                    }
+                }
+            }
             let recovered = db.recover_interrupted()?;
             if recovered > 0 {
                 log::info!("встреч, прерванных при прошлом запуске: {recovered}");

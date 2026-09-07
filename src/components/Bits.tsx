@@ -11,7 +11,7 @@ export function TypeTag({ type, source }: { type: MeetingType; source?: "llm" | 
   return (
     <span className="tag" title={source === "llm" ? "Тип определён моделью" : source === "user" ? "Тип задан вручную" : "Тип по умолчанию"}>
       {typeLabel(type)}
-      {source === "llm" ? " · ai" : ""}
+      {source === "llm" ? " · по модели" : ""}
     </span>
   );
 }

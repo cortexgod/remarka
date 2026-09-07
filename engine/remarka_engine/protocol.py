@@ -31,8 +31,12 @@ for _name, _share in STAGE_SHARES:
 _STAGE_SHARE = dict(STAGE_SHARES)
 
 
-class Cancelled(Exception):
-    """SIGTERM/SIGINT: движок должен завершиться событием error «cancelled»."""
+class Cancelled(BaseException):
+    """SIGTERM/SIGINT: движок должен завершиться событием error «cancelled».
+
+    Наследуется от BaseException (как KeyboardInterrupt), чтобы не проглатываться
+    блоками `except Exception` внутри стадий конвейера.
+    """
 
 
 def install_cancel_handlers() -> None:

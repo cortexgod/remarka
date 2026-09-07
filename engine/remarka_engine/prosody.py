@@ -6,6 +6,10 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+# Кадры «цифровой тишины» (нули между словами у шумодавов/гарнитур): Praat отдаёт −300 дБ,
+# они конечны и обрушивают средние по дБ — отбрасываем всё ниже порога слышимости.
+SILENCE_FRAME_DB = -100.0
+
 from .model import Sentence, SpeechEvent, fmt_signed
 from .spans import Span
 
@@ -80,7 +84,7 @@ def _voiced_in(fr: ProsodyFrames, a: float, b: float) -> tuple[np.ndarray, np.nd
 
 
 def _db_in(fr: ProsodyFrames, a: float, b: float) -> np.ndarray:
-    m = (fr.int_t >= a) & (fr.int_t <= b) & fr.int_mine & np.isfinite(fr.db)
+    m = (fr.int_t >= a) & (fr.int_t <= b) & fr.int_mine & np.isfinite(fr.db) & (fr.db > SILENCE_FRAME_DB)
     return fr.db[m]
 
 
@@ -225,7 +229,7 @@ def analyze(samples: np.ndarray, sr: int, mic_speech: list[Span], sentences: lis
     share, ev = rising_statements(fr, sentences)
     values["rising_statements_share"] = share
     events += ev
-    mine_db = fr.db[fr.int_mine & np.isfinite(fr.db)]
+    mine_db = fr.db[fr.int_mine & np.isfinite(fr.db) & (fr.db > SILENCE_FRAME_DB)]
     if mine_db.size >= 10:
         values["loudness_mean_db"] = float(np.mean(mine_db))
         half = mine_db.size // 2

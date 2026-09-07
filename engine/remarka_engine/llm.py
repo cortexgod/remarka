@@ -383,7 +383,9 @@ class LlmClient:
         ]
         if self.cli_use_json_schema:
             cmd += ["--json-schema", schema_hint(schema_model)]
-        cmd += ["--tools", ""]  # модели не нужны инструменты — только текст
+        # Модели не нужны инструменты, MCP-серверы и пользовательские плагины/хуки:
+        # без этого каждый вызов поднимал бы MCP-серверы из ~/.claude (например, Telegram-бота).
+        cmd += ["--tools", "", "--strict-mcp-config", "--setting-sources", ""]
         return cmd
 
     def _run_cli(self, exe: str, system: str, user_text: str, schema_model: type[pydantic.BaseModel]) -> dict[str, Any]:

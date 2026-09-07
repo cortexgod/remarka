@@ -34,3 +34,11 @@ mod tests {
         assert!(chrono::DateTime::parse_from_rfc3339(&s).is_ok(), "{s}");
     }
 }
+
+/// Системное уведомление (macOS Notification Center / Windows toast). Ошибки только в лог.
+pub fn notify(app: &tauri::AppHandle, title: &str, body: &str) {
+    use tauri_plugin_notification::NotificationExt;
+    if let Err(e) = app.notification().builder().title(title).body(body).show() {
+        log::warn!("уведомление не показано: {e}");
+    }
+}

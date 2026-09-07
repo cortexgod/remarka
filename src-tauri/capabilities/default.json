@@ -32,6 +32,7 @@
     "core:window:allow-scale-factor",
     "core:window:allow-primary-monitor",
     "core:window:allow-current-monitor",
-    "opener:default"
+    "opener:default",
+    "notification:default"
   ]
 }

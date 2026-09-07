@@ -96,7 +96,9 @@ def compute(inp: Layer1Inputs, meeting_type: str) -> tuple[dict[str, MetricValue
     counts: dict[str, int] = {}
     for e in inp.events:
         counts[e.kind] = counts.get(e.kind, 0) + 1
-    active = active_seconds(inp.mic_speech, inp.system_speech)
+    # Знаменатель *_per_min — моё активное время речи Σ mic_speech (§12):
+    # иначе при записи без системной дорожки речь собеседника разбавляла бы метрики.
+    active = total(inp.mic_speech)
     minutes = active / 60.0 if active > 0 else 0.0
 
     def per_min(n: int) -> float | None:

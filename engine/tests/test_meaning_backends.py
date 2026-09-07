@@ -71,7 +71,7 @@ def test_cli_parses_fenced_json_and_builds_command(cli: LlmClient, monkeypatch: 
     assert cmd[cmd.index("--output-format") + 1] == "json"
     assert cmd[cmd.index("--model") + 1] == "claude-opus-5"
     assert cmd[cmd.index("--system-prompt") + 1] == "СИСТЕМА"
-    assert cmd[-2:] == ["--tools", ""]
+    assert "--tools" in cmd and cmd[cmd.index("--tools") + 1] == "" and "--strict-mcp-config" in cmd
     assert "--json-schema" not in cmd
     assert call["input"] == "ЗАПРОС"  # промпт — в stdin
     assert call["timeout"] == 180.0
@@ -159,7 +159,7 @@ argv = sys.argv[1:]
 prompt = sys.stdin.read()
 system = argv[argv.index("--system-prompt") + 1] if "--system-prompt" in argv else ""
 assert "-p" in argv and argv[argv.index("--output-format") + 1] == "json", argv
-assert argv[-2:] == ["--tools", ""], argv  # пустой аргумент должен дойти до процесса
+assert "--tools" in argv and argv[argv.index("--tools") + 1] == "", argv  # пустой аргумент должен дойти до процесса
 if '"three_things"' in prompt:
     mine = [m.group(1) for m in re.finditer(r"^\[\d\d:\d\d\] (?!СОБЕСЕДНИК)(.+)$", prompt, re.M)]
     quotes = [mine[1], "выдуманная цитата", mine[5]]  # 2 дословных из 3 → движок попросит повтор

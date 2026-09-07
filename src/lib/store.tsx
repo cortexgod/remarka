@@ -115,6 +115,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         refreshMeetings();
       }),
       on("recording:tick", (t) => setTick(t)),
+      on("recording:warning", (w) => toast(w.message, "err")),
       on("recording:stopped", () => {
         setTick(null);
         refreshAppState();

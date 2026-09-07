@@ -15,9 +15,10 @@ export default function Feed() {
   const [preset, setPreset] = useState<string | undefined>();
   const [baseline, setBaseline] = useState<Baseline | null | undefined>();
 
+  const readyKey = meetings.map((m) => m.id + ":" + m.status).join("|");
   useEffect(() => {
     api.getBaseline().then(setBaseline).catch(() => setBaseline(null));
-  }, [meetings.length]);
+  }, [readyKey]);
 
   const readyNonTraining = useMemo(() => meetings.filter((m) => m.status === "ready" && m.meeting_type !== "training").length, [meetings]);
   const recording = appState?.recording;

@@ -479,6 +479,10 @@ export interface EvAnalysisError {
   meeting_id: string;
   message: string;
 }
+export interface EvRecordingWarning {
+  meeting_id: string;
+  message: string; // микрофон отключился / системная дорожка оборвалась
+}
 export interface EvMeetingApp {
   app: string | null; // "zoom" | "meet" | "teams" | "telemost" | null (null = завершилось)
 }
@@ -487,6 +491,7 @@ export const EVENTS = {
   recordingStarted: "recording:started",
   recordingTick: "recording:tick",
   recordingStopped: "recording:stopped",
+  recordingWarning: "recording:warning",
   analysisProgress: "analysis:progress",
   analysisDone: "analysis:done",
   analysisError: "analysis:error",

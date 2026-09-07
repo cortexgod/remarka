@@ -11,15 +11,27 @@ use std::sync::{Arc, Mutex};
 
 /// Последний уровень системной дорожки, дБFS (пишет захват, читает поток тиков микрофона).
 #[derive(Default)]
-pub struct LevelCell(Mutex<Option<f32>>);
+pub struct LevelCell {
+    level: Mutex<Option<f32>>,
+    /// Ошибка захвата во время записи (сайдкар упал, разрешение отозвано) — читает поток тиков.
+    error: Mutex<Option<String>>,
+}
 
 impl LevelCell {
     pub fn get(&self) -> Option<f32> {
-        *crate::util::lock(&self.0)
+        *crate::util::lock(&self.level)
     }
 
     pub fn set(&self, v: Option<f32>) {
-        *crate::util::lock(&self.0) = v;
+        *crate::util::lock(&self.level) = v;
+    }
+
+    pub fn error(&self) -> Option<String> {
+        crate::util::lock(&self.error).clone()
+    }
+
+    pub fn set_error(&self, e: Option<String>) {
+        *crate::util::lock(&self.error) = e;
     }
 }
 
@@ -32,6 +44,10 @@ pub trait SystemCapture: Send {
     fn level(&self) -> Option<f32>;
     /// Разделяемая ячейка уровня (для тиков без блокировки состояния).
     fn level_cell(&self) -> Arc<LevelCell>;
+    /// Ошибка, случившаяся во время записи (после успешного старта).
+    fn error(&self) -> Option<String> {
+        None
+    }
 }
 
 /// Поддерживается ли захват системного звука на этой машине прямо сейчас.

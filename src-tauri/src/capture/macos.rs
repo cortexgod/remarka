@@ -121,7 +121,25 @@ fn reader_loop(stdout: std::process::ChildStdout, shared: Arc<TapShared>) {
         }
     }
     shared.exited.store(true, Ordering::SeqCst);
+    // процесс завершился: уровня больше нет; если это не штатный stop — это обрыв дорожки
+    shared.level.set(None);
+    let stopped = crate::util::lock(&shared.stopped_duration).is_some();
+    if !stopped {
+        let msg = crate::util::lock(&shared.error).clone().unwrap_or_else(|| {
+            "Помощник записи системного звука (remarka-tap) завершился неожиданно — системная дорожка оборвалась".to_string()
+        });
+        if crate::util::lock(&shared.error).is_none() {
+            *crate::util::lock(&shared.error) = Some(msg.clone());
+        }
+        if shared.ready.load(Ordering::SeqCst) {
+            shared.level.set_error(Some(msg));
+        }
+    }
 }
+
+/// Сколько ждать `ready`: сайдкар сам ждёт ответа на системный диалог разрешения до 180 с
+/// и сам завершается с `error`, если захват не пошёл, — поэтому здесь только запас.
+const READY_TIMEOUT: Duration = Duration::from_secs(190);
 
 impl SystemCapture for TapCapture {
     fn start(&mut self, path: &Path) -> Result<()> {
@@ -138,8 +156,20 @@ impl SystemCapture for TapCapture {
             .arg("--level-interval-ms")
             .arg("200")
             .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::inherit());
+            .stdout(Stdio::piped());
+        // stderr сайдкара — в tap.log рядом с записью (в бандле иначе теряется)
+        match path
+            .parent()
+            .map(|d| d.join("tap.log"))
+            .and_then(|p| std::fs::File::create(p).ok())
+        {
+            Some(f) => {
+                cmd.stderr(Stdio::from(f));
+            }
+            None => {
+                cmd.stderr(Stdio::inherit());
+            }
+        }
         let mut child = cmd
             .spawn()
             .with_context(|| format!("не удалось запустить {}", self.binary.display()))?;
@@ -167,9 +197,13 @@ impl SystemCapture for TapCapture {
                 let _ = self.stop();
                 return Err(anyhow!("remarka-tap завершился, не начав запись"));
             }
-            if t.elapsed() > Duration::from_secs(10) {
-                let _ = self.stop();
-                return Err(anyhow!("remarka-tap не начал запись за 10 с"));
+            if t.elapsed() > READY_TIMEOUT {
+                let stop_err = self.stop().err().map(|e| format!("{e:#}"));
+                return Err(anyhow!(
+                    "remarka-tap не начал запись за {} с{}",
+                    READY_TIMEOUT.as_secs(),
+                    stop_err.map(|e| format!(": {e}")).unwrap_or_default()
+                ));
             }
             std::thread::sleep(Duration::from_millis(20));
         }
@@ -232,6 +266,10 @@ impl SystemCapture for TapCapture {
 
     fn level_cell(&self) -> Arc<LevelCell> {
         self.shared.level.clone()
+    }
+
+    fn error(&self) -> Option<String> {
+        self.error_text()
     }
 }
 
