@@ -14,6 +14,16 @@ if [ -z "$HOST" ]; then
 fi
 # аргументы экранируем для удалённого bash (printf %q), stdin пробрасывается ssh как есть
 REMOTE="$(printf '%q ' "$REMOTE_BIN" "$@")"
-exec ssh -i "$KEY" -o BatchMode=yes -o ConnectTimeout=20 -o ServerAliveInterval=30 \
-  -o ControlMaster=auto -o ControlPath="/tmp/remarka-ssh-%C" -o ControlPersist=120 \
-  "$HOST" "$REMOTE"
+# код 255 — ошибка самого ssh (обрыв соединения, протухший control-socket): пробуем ещё дважды.
+# stdin читается только первой попыткой, поэтому буферизуем его.
+INPUT="$(cat)"
+for attempt in 1 2 3; do
+  printf '%s' "$INPUT" | ssh -i "$KEY" -o BatchMode=yes -o ConnectTimeout=20 -o ServerAliveInterval=30 \
+    -o ControlMaster=auto -o ControlPath="/tmp/remarka-ssh-%C" -o ControlPersist=120 \
+    "$HOST" "$REMOTE"
+  rc=$?
+  [ "$rc" -ne 255 ] && exit "$rc"
+  rm -f /tmp/remarka-ssh-* 2>/dev/null
+  sleep 2
+done
+exit 255
