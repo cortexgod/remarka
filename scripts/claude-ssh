@@ -1,11 +1,19 @@
 #!/bin/bash
 # Обёртка «claude через SSH»: движок Ремарки вызывает её вместо локального claude,
-# и слой смысла считается на VPS, где Claude Code авторизован. Наружу уходит только текст.
-# Настройка: REMARKA_SSH_HOST (user@host), REMARKA_SSH_KEY (~/.ssh/id_ed25519).
-HOST="${REMARKA_SSH_HOST:-user@host}"
+# и слой смысла считается на сервере, где Claude Code авторизован. Наружу уходит только текст.
+# Настройка: файл scripts/claude-ssh.env (не в git) или переменные окружения:
+#   REMARKA_SSH_HOST=user@host   REMARKA_SSH_KEY=~/.ssh/id_ed25519   REMARKA_SSH_REMOTE=/usr/local/bin/remarka-claude
+ENV_FILE="$(cd "$(dirname "$0")" && pwd)/claude-ssh.env"
+[ -f "$ENV_FILE" ] && . "$ENV_FILE"
+HOST="${REMARKA_SSH_HOST:-}"
 KEY="${REMARKA_SSH_KEY:-$HOME/.ssh/id_ed25519}"
+REMOTE_BIN="${REMARKA_SSH_REMOTE:-/usr/local/bin/remarka-claude}"
+if [ -z "$HOST" ]; then
+  echo '{"type":"result","is_error":true,"result":"REMARKA_SSH_HOST не задан: укажите user@host в scripts/claude-ssh.env"}' >&2
+  exit 1
+fi
 # аргументы экранируем для удалённого bash (printf %q), stdin пробрасывается ssh как есть
-REMOTE="$(printf '%q ' /usr/local/bin/remarka-claude "$@")"
+REMOTE="$(printf '%q ' "$REMOTE_BIN" "$@")"
 exec ssh -i "$KEY" -o BatchMode=yes -o ConnectTimeout=20 -o ServerAliveInterval=30 \
   -o ControlMaster=auto -o ControlPath="/tmp/remarka-ssh-%C" -o ControlPersist=120 \
   "$HOST" "$REMOTE"

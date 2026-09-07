@@ -31,3 +31,6 @@ engine/*.egg-info/
 src-tauri/binaries/
 tap/.build/
 *.log
+
+# локальные настройки SSH-обёртки
+scripts/claude-ssh.env

@@ -1,0 +1,4 @@
+#!/bin/bash
+# Ремарка: headless-вызов claude под пользователем assistant (OAuth-токен из ~/.claude/oauth.env).
+# Аргументы и stdin пробрасываются как есть; stdout — ответ claude.
+exec sudo -u assistant -H bash -c 'set -a; . "$HOME/.claude/oauth.env"; set +a; cd "$HOME"; exec "$HOME/.local/bin/claude" "$@"' _ "$@"
