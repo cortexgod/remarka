@@ -101,6 +101,12 @@ pub fn bundled_engine() -> Option<PathBuf> {
 }
 
 /// Скачана ли модель распознавания в кэш HF (`~/.cache/huggingface/hub/models--<repo>/snapshots/*/model.bin`).
+/// Есть ли доступ к серверу советов: relay.json в папке данных или адрес в окружении.
+/// В публичной сборке файла нет — советы, конспект, подготовка и наблюдения отключены.
+pub fn advice_available(data_dir: &Path) -> bool {
+    data_dir.join("relay.json").is_file() || std::env::var_os("REMARKA_RELAY_URL").is_some()
+}
+
 pub fn asr_model_cached(model: &str) -> bool {
     let repo = match model {
         "large-v3-turbo" | "turbo" => "mobiuslabsgmbh/faster-whisper-large-v3-turbo".to_string(),
@@ -157,6 +163,8 @@ impl Launcher {
                 cmd.env("ANTHROPIC_API_KEY", key);
             }
         }
+        // доступ к серверу советов: relay.json в папке данных (в сборку не входит, только у автора)
+        cmd.env("REMARKA_RELAY_FILE", data_dir.join("relay.json"));
         // профиль человека — в промпт слоя смысла
         if !settings.profile.is_empty() {
             if let Ok(js) = serde_json::to_string(&settings.profile) {

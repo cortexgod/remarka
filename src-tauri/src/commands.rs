@@ -365,6 +365,7 @@ pub fn get_app_state(state: State<'_, AppState>) -> CmdResult<AppStateInfo> {
         data_dir: state.paths.data_dir.display().to_string(),
         asr_model: settings.asr_model.clone(),
         asr_model_cached: engine::asr_model_cached(&settings.asr_model),
+        advice_available: engine::advice_available(&state.paths.data_dir),
     })
 }
 

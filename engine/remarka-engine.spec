@@ -2,7 +2,7 @@
 from PyInstaller.utils.hooks import collect_submodules
 from PyInstaller.utils.hooks import collect_all
 
-datas = [('remarka_engine/data', 'remarka_engine/data'), ('remarka_engine/prompts', 'remarka_engine/prompts'), ('../docs/report.schema.json', 'docs'), ('../docs/baseline.schema.json', 'docs'), ('../docs/patterns.schema.json', 'docs'), ('../docs/prep.schema.json', 'docs')]
+datas = [('build-data', 'remarka_engine/data'), ('remarka_engine/prompts', 'remarka_engine/prompts'), ('../docs/report.schema.json', 'docs'), ('../docs/baseline.schema.json', 'docs'), ('../docs/patterns.schema.json', 'docs'), ('../docs/prep.schema.json', 'docs')]
 binaries = []
 hiddenimports = ['remarka_engine.cli', 'remarka_engine.meaning', 'remarka_engine.llm', 'remarka_engine.summary', 'remarka_engine.patterns', 'remarka_engine.prepare', 'remarka_engine.rescore']
 hiddenimports += collect_submodules('scipy')

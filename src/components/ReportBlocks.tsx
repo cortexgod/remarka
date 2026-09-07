@@ -4,6 +4,7 @@ import type { Report, TimePoint } from "../types/contracts";
 import { fmtDur, fmtNum, fmtPct, fmtTime, typeLabel } from "../lib/format";
 import { METRIC_DEFS, METRIC_BY_KEY, STATUS_TEXT, fmtMetricFull, fmtMetricValue, getMetric, higherIsBetter, metricLabel, refText } from "../lib/metrics";
 import { useWidth } from "../lib/useWidth";
+import { useStore } from "../lib/store";
 import { Delta } from "./Bits";
 
 type Seek = (t: number, andPlay?: boolean) => void;
@@ -50,13 +51,20 @@ export function Kpis({ report }: { report: Report }) {
 }
 
 export function ThreeThings({ report, onSeek }: { report: Report; onSeek: Seek }) {
+  const { appState } = useStore();
   const mean = report.meaning;
   if (!mean) {
     const reason = report.engine.warnings.find((w) => w.startsWith("Слой смысла"));
     const words = report.transcript.words.length;
+    const noAdvice = (appState && !appState.advice_available) || /отключён/.test(reason ?? "");
     return (
       <div className="note soft">
-        {words < 30 ? (
+        {noAdvice ? (
+          <>
+            <p>В этой сборке советов нет.</p>
+            <p className="muted">Цифры, транскрипт и сравнение с нормами работают полностью. Советы, конспект и ответы на вопросы собеседника строит сервер, доступ к которому есть только у автора приложения.</p>
+          </>
+        ) : words < 30 ? (
           <p>Запись слишком короткая для советов — нужно хотя бы полминуты речи.</p>
         ) : reason ? (
           <>

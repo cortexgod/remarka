@@ -74,6 +74,19 @@ def make_llm_client(backend: str, model: str) -> Any:
         return client_cls(backend, model)
 
 
+def resolve_backend(backend: str) -> str:
+    """Во что превращается ``auto``/``remote``: ``remote``, если есть relay.json, иначе локальные
+    варианты, иначе ``none`` (советы отключены — публичная сборка без сервера)."""
+    if backend not in ("auto", "remote"):
+        return backend
+    try:
+        llm = importlib.import_module("remarka_engine.llm")
+    except ImportError:
+        return "none"
+    detect = getattr(llm, "detect_backend", None)
+    return detect(backend) if callable(detect) else backend
+
+
 def _call_first(module: Any, names: list[str], /, **kwargs: Any) -> Any:
     """Вызвать первую найденную функцию модуля агента «meaning», передав только те kwargs,
     которые она принимает (report/backend/model/log/…); результат Pydantic → dict."""
@@ -317,6 +330,9 @@ def run_analyze(opts: AnalyzeOptions, emitter: Emitter | None = None) -> dict[st
         elif not words:
             warn("Слой смысла пропущен: нет транскрипта")
             em.progress(stage, 1.0, "Слой смысла пропущен")
+        elif resolve_backend(opts.llm) == "none":
+            warn("Слой смысла отключён: сервер советов не настроен")
+            em.progress(stage, 1.0, "Советы отключены")
         else:
             em.progress(stage, 0.0, f"Слой смысла ({opts.llm})")
             draft = assemble(None)

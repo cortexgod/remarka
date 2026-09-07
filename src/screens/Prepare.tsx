@@ -5,7 +5,7 @@ import { useStore } from "../lib/store";
 import { TYPE_ORDER, typeLabel } from "../lib/format";
 
 export default function Prepare() {
-  const { run } = useStore();
+  const { run, appState } = useStore();
   const [topic, setTopic] = useState("");
   const [type, setType] = useState<MeetingType>("pitch");
   const [busy, setBusy] = useState(false);
@@ -27,7 +27,13 @@ export default function Prepare() {
     <div className="page">
       <h1 className="title">Подготовка</h1>
       <p className="lede">Опиши, о чём будет встреча, — получишь короткий чеклист и вопросы, которые тебе, скорее всего, зададут.</p>
-      <div className="card prep-form">
+      {appState && !appState.advice_available && (
+        <div className="note soft">
+          <p>В этой сборке подготовка недоступна.</p>
+          <p className="muted">Чеклист и вопросы строит сервер советов, доступ к которому есть только у автора приложения. Запись, разбор и прогресс работают полностью.</p>
+        </div>
+      )}
+      {(!appState || appState.advice_available) && <div className="card prep-form">
         <label className="field">
           <span className="label">Тема или повестка</span>
           <textarea className="textarea" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Например: питч «Возвратки» фонду ранних стадий, раунд 40 млн, есть 23 платящих магазина" />
@@ -43,7 +49,7 @@ export default function Prepare() {
           </label>
           <button className="btn primary" onClick={go} disabled={busy || !topic.trim()}>{busy ? "Готовим…" : "Подготовить"}</button>
         </div>
-      </div>
+      </div>}
       {res && (
         <div className="grid-2 prep-result">
           <div>

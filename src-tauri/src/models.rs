@@ -198,6 +198,8 @@ pub struct AppStateInfo {
     pub data_dir: String,
     pub asr_model: String,
     pub asr_model_cached: bool,
+    /// есть ли доступ к серверу советов (relay.json в папке данных)
+    pub advice_available: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

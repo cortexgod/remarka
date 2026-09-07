@@ -153,14 +153,32 @@ def render_prompt(template: str, **values: Any) -> str:
 # ---------------------------------------------------------------------------
 
 
+def relay_paths() -> list[Path]:
+    """Где искать relay.json: путь из REMARKA_RELAY_FILE (его передаёт оболочка — папка данных
+    приложения), затем рядом с движком (в публичную сборку файл не кладётся), затем папка данных
+    приложения по умолчанию — для запуска движка из venv."""
+    out: list[Path] = []
+    if os.environ.get("REMARKA_RELAY_FILE"):
+        out.append(Path(os.environ["REMARKA_RELAY_FILE"]))
+    out.append(Path(__file__).resolve().parent / "data" / "relay.json")
+    home = Path.home()
+    out.append(home / "Library" / "Application Support" / "com.remarka.app" / "relay.json")
+    out.append(home / ".config" / "remarka" / "relay.json")
+    return out
+
+
 def relay_config() -> dict[str, str] | None:
-    """Адрес, токен и сертификат LLM-ретранслятора (data/relay.json). None — не настроен."""
-    p = Path(__file__).resolve().parent / "data" / "relay.json"
+    """Адрес, токен и сертификат сервера советов (relay.json, см. relay_paths). None — не настроен.
+    Доступ к серверу есть только у того, у кого лежит этот файл: в сборку он не входит."""
     env_url = os.environ.get("REMARKA_RELAY_URL")
-    try:
-        cfg = json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
-    except Exception:  # noqa: BLE001
-        cfg = {}
+    cfg: dict[str, str] = {}
+    for p in relay_paths():
+        try:
+            if p.is_file():
+                cfg = json.loads(p.read_text(encoding="utf-8"))
+                break
+        except Exception:  # noqa: BLE001
+            continue
     if env_url:
         cfg["url"] = env_url
     if os.environ.get("REMARKA_RELAY_TOKEN"):

@@ -5,12 +5,14 @@ set -euo pipefail
 cd "$(dirname "$0")"
 PY=.venv/bin/python
 uv pip install -q --python "$PY" "pyinstaller>=6.10"
-rm -rf build dist
+rm -rf build dist build-data
+# данные движка — без relay.json: доступ к серверу советов в сборку не кладём, он живёт в папке данных автора
+mkdir build-data && cp remarka_engine/data/*.json build-data/ && rm -f build-data/relay.json
 $PY -m PyInstaller --noconfirm --clean --onedir --name remarka-engine \
   --collect-all faster_whisper --collect-all ctranslate2 --collect-all onnxruntime \
   --collect-all parselmouth --collect-submodules scipy --collect-all soundfile \
   --collect-all anthropic --collect-all pydantic --collect-all tokenizers --collect-all huggingface_hub \
-  --add-data "remarka_engine/data:remarka_engine/data" \
+  --add-data "build-data:remarka_engine/data" \
   --add-data "remarka_engine/prompts:remarka_engine/prompts" \
   --add-data "../docs/report.schema.json:docs" --add-data "../docs/baseline.schema.json:docs" \
   --add-data "../docs/patterns.schema.json:docs" --add-data "../docs/prep.schema.json:docs" \
@@ -18,6 +20,8 @@ $PY -m PyInstaller --noconfirm --clean --onedir --name remarka-engine \
   --hidden-import remarka_engine.summary --hidden-import remarka_engine.patterns --hidden-import remarka_engine.prepare \
   --hidden-import remarka_engine.rescore \
   --paths . sidecar_main.py
+rm -rf build-data
+if find dist -name relay.json | grep -q .; then echo "ОШИБКА: relay.json попал в сборку" >&2; exit 1; fi
 du -sh dist/remarka-engine
 echo "--- smoke: doctor"
 dist/remarka-engine/remarka-engine doctor --asr-model small --llm none

@@ -10,7 +10,7 @@ import { LineChart } from "../components/LineChart";
 import { Delta } from "../components/Bits";
 
 export default function Progress() {
-  const { run, meetings } = useStore();
+  const { run, meetings, appState } = useStore();
   const [data, setData] = useState<ProgressData | null>(null);
   const [patterns, setPatterns] = useState<PatternsResult | null>(null);
   const [baseline, setBaseline] = useState<Baseline | null>(null);
@@ -144,9 +144,10 @@ export default function Progress() {
       <div className="section">
         <div className="section-head">
           <h2 className="h">Что видно только по всем встречам сразу</h2>
-          <button className="btn small" onClick={refresh} disabled={busy}>{busy ? "Считаем…" : "Обновить"}</button>
+          {(!appState || appState.advice_available) && <button className="btn small" onClick={refresh} disabled={busy}>{busy ? "Считаем…" : "Обновить"}</button>}
         </div>
-        {!patterns && <p className="hint">Наблюдения появятся после нескольких разобранных встреч. Нажми «Обновить».</p>}
+        {appState && !appState.advice_available && !patterns && <p className="hint">В этой сборке недоступно: наблюдения между встречами строит сервер советов, доступ к которому есть только у автора приложения.</p>}
+        {(!appState || appState.advice_available) && !patterns && <p className="hint">Наблюдения появятся после нескольких разобранных встреч. Нажми «Обновить».</p>}
         {patterns && (
           <>
             <div className="insights">

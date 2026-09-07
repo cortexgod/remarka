@@ -375,6 +375,7 @@ export interface AppState {
   data_dir: string;
   asr_model: string; // текущая модель распознавания
   asr_model_cached: boolean; // скачана ли она (иначе первый запуск предложит скачать)
+  advice_available: boolean; // есть ли доступ к серверу советов (relay.json в папке данных; в публичной сборке — нет)
 }
 
 export interface AudioDevice {
