@@ -29,7 +29,7 @@ export function MeetingCardView({ m, progress, onAnalyze, onDelete }: Props) {
           {m.status === "analyzing" && <span className="tag signal">анализ</span>}
           {m.status === "recorded" && <span className="tag">не разобрано</span>}
           {m.status === "error" && <span className="tag signal">ошибка</span>}
-          {m.status === "recording" && <span className="tag fill">rec</span>}
+          {m.status === "recording" && <span className="tag fill">идёт запись</span>}
         </div>
       </div>
       {m.status === "ready" && (

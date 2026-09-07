@@ -25,7 +25,6 @@ export default function Prepare() {
 
   return (
     <div className="page">
-      <p className="eyebrow">Подготовка</p>
       <h1 className="title">Три вопроса, которые зададут</h1>
       <p className="lede">Вставь тему или повестку — получишь чеклист под тип встречи и вопросы, к которым стоит подготовиться заранее.</p>
       <div className="card prep-form">

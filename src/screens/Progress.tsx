@@ -43,7 +43,6 @@ export default function Progress() {
 
   return (
     <div className="page">
-      <p className="eyebrow">Прогресс</p>
       <h1 className="title">Как меняется речь</h1>
       <p className="lede">Метрики по встречам, серия, сравнение месяцев и то, что видно только по всем встречам сразу.</p>
       {err && <div className="note"><p>{err}</p></div>}

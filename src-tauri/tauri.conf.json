@@ -21,7 +21,9 @@
         "minWidth": 960,
         "minHeight": 640,
         "center": true,
-        "visible": true
+        "visible": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true
       },
       {
         "label": "overlay",
@@ -44,7 +46,10 @@
       "csp": null,
       "assetProtocol": {
         "enable": true,
-        "scope": ["$APPDATA/**", "$APPLOCALDATA/**"]
+        "scope": [
+          "$APPDATA/**",
+          "$APPLOCALDATA/**"
+        ]
       }
     }
   },
@@ -58,7 +63,9 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "externalBin": ["binaries/remarka-tap"],
+    "externalBin": [
+      "binaries/remarka-tap"
+    ],
     "macOS": {
       "minimumSystemVersion": "14.4"
     }

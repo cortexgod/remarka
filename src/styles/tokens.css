@@ -1,65 +1,75 @@
-/* Токены дизайна — ровно из docs/plan.html (§9 CONTRACTS.md) */
+/* Токены дизайна: в духе Termius — тёмно‑синий фон, мягкие скруглённые поверхности без рамок,
+   один синий акцент, геометрический гротеск. Тёмная тема по умолчанию, светлая — по настройке. */
 :root {
-  --ground: #EDEEF0;
-  --surface: #F8F9FA;
-  --surface-2: #E3E5E9;
-  --ink: #14171C;
-  --ink-2: #575E6A;
-  --ink-3: #848C99;
-  --rule: #D2D6DC;
-  --rule-soft: #DEE1E6;
-  --signal: #B31D42;
-  --signal-ink: #A81B3E;
-  --signal-wash: rgba(179, 29, 66, .09);
-  --ok: #2C6E52;
-  --warn: #8E6415;
-  --shadow: 0 1px 2px rgba(20, 23, 28, .06), 0 8px 24px -12px rgba(20, 23, 28, .18);
-
-  --f-display: "Unbounded", "Golos Text", system-ui, sans-serif;
-  --f-body: "Golos Text", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
-
-  --col: min(68ch, 100%);
-  --pad: clamp(20px, 3vw, 40px);
-  --rail-w: 206px;
-
-  color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --ground: #101317;
-    --surface: #171B21;
-    --surface-2: #1F242C;
-    --ink: #E9EBEE;
-    --ink-2: #9BA3AF;
-    --ink-3: #6E7784;
-    --rule: #272D36;
-    --rule-soft: #20262E;
-    --signal: #F2506F;
-    --signal-ink: #FF7B95;
-    --signal-wash: rgba(242, 80, 111, .13);
-    --ok: #5FBE92;
-    --warn: #D4A24C;
-    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px -16px rgba(0, 0, 0, .6);
-    color-scheme: dark;
-  }
-}
-
-:root[data-theme="dark"] {
-  --ground: #101317;
-  --surface: #171B21;
-  --surface-2: #1F242C;
-  --ink: #E9EBEE;
-  --ink-2: #9BA3AF;
-  --ink-3: #6E7784;
-  --rule: #272D36;
-  --rule-soft: #20262E;
-  --signal: #F2506F;
-  --signal-ink: #FF7B95;
-  --signal-wash: rgba(242, 80, 111, .13);
-  --ok: #5FBE92;
-  --warn: #D4A24C;
-  --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px -16px rgba(0, 0, 0, .6);
   color-scheme: dark;
+
+  --bg: #1f2536;          /* фон контента */
+  --bg-2: #2a3145;        /* поверхности: поля, кнопки, карточки */
+  --bg-3: #353d55;        /* наведение / нажатие */
+  --sidebar: #1a1f2e;
+  --titlebar-bg: #171b28;
+  --ink: #f3f5f9;
+  --ink-2: #9aa3b8;
+  --ink-3: #6b7490;
+  --rule: #2e364b;
+  --rule-soft: #283042;
+  --ctrl-border: transparent;
+  --ctrl-shadow: none;
+
+  --accent: #2d8cff;
+  --accent-hover: #4a9dff;
+  --accent-wash: rgba(45, 140, 255, .14);
+  --on-accent: #ffffff;
+
+  --ok: #3ddc84;   --ok-bg: rgba(61, 220, 132, .14);
+  --warn: #f5a623; --warn-bg: rgba(245, 166, 35, .16);
+  --bad: #ff5c5c;  --bad-bg: rgba(255, 92, 92, .14);
+  --mark: rgba(245, 200, 66, .22);   /* подсветка филлеров в транскрипте */
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 12px 32px -14px rgba(0, 0, 0, .6);
+  --shadow-pop: 0 0 0 1px rgba(255, 255, 255, .06), 0 24px 60px -16px rgba(0, 0, 0, .7);
+
+  --f: "Manrope Variable", "Manrope", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --f-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  --radius: 10px;
+  --radius-s: 8px;
+  --rail-w: 216px;
+  --pad: 28px;
+  --titlebar: 44px;   /* зона «светофоров» при overlay‑заголовке */
+
+  /* совместимость: старые имена, которые используют SVG‑графики и компоненты */
+  --ground: var(--bg);
+  --surface: var(--bg-2);
+  --surface-2: var(--bg-3);
+  --signal: var(--accent);
+  --signal-ink: var(--accent);
+  --signal-wash: var(--accent-wash);
+  --f-display: var(--f);
+  --f-body: var(--f);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f6f7fb;
+  --bg-2: #ffffff;
+  --bg-3: #eaedf4;
+  --sidebar: #eef0f6;
+  --titlebar-bg: #e7eaf2;
+  --ink: #1b2030;
+  --ink-2: #5f6880;
+  --ink-3: #9aa3b8;
+  --rule: #e1e5ee;
+  --rule-soft: #eaedf4;
+  --ctrl-border: rgba(20, 30, 60, .10);
+  --ctrl-shadow: 0 1px 2px rgba(20, 30, 60, .06);
+  --accent: #2d7ff2;
+  --accent-hover: #1f6fe0;
+  --accent-wash: rgba(45, 127, 242, .12);
+  --ok: #1f9d55;   --ok-bg: rgba(31, 157, 85, .12);
+  --warn: #c27800; --warn-bg: rgba(245, 166, 35, .18);
+  --bad: #d63b3b;  --bad-bg: rgba(214, 59, 59, .12);
+  --mark: rgba(245, 200, 66, .35);
+  --shadow: 0 1px 2px rgba(20, 30, 60, .06), 0 12px 32px -14px rgba(20, 30, 60, .25);
+  --shadow-pop: 0 0 0 1px rgba(20, 30, 60, .08), 0 24px 60px -16px rgba(20, 30, 60, .35);
 }

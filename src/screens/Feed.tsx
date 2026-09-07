@@ -44,14 +44,8 @@ export default function Feed() {
 
   return (
     <div className="page">
-      <div className="row between top" style={{ marginBottom: 20 }}>
-        <div>
-          <p className="eyebrow">Лента</p>
-          <h1 className="title">Встречи</h1>
-          <p className="lede" style={{ marginBottom: 0 }}>
-            Каждая запись разбирается локально: темп, паузы, тон — и три правки с таймкодами.
-          </p>
-        </div>
+      <div className="page-head">
+        <h1 className="title">Встречи</h1>
         {!recording && (
           <button
             className="btn signal"
@@ -114,11 +108,10 @@ export default function Feed() {
 
       {meetings.length > 0 && (
         <>
-          <div className="section-head" style={{ marginTop: 8 }}>
+          <div className="section-head" style={{ marginTop: 4 }}>
             <span className="aside">
               {meetings.length} {plural(meetings.length, "запись", "записи", "записей")}
             </span>
-            <span className="aside">новые сверху</span>
           </div>
           <div className="mlist">
             {meetings.map((m) => (

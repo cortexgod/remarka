@@ -32,7 +32,6 @@ export function RecordDialog({ open, onClose, onStart, presetTitle }: Props) {
   return (
     <div className="modal-back" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Новая запись">
-        <p className="eyebrow">Новая запись</p>
         <h2 className="h">Что записываем</h2>
         <div className="col" style={{ gap: 16, marginTop: 16 }}>
           <label className="field">

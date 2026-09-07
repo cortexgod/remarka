@@ -11,12 +11,28 @@ import Prepare from "./screens/Prepare";
 import Settings from "./screens/Settings";
 import Overlay from "./screens/Overlay";
 
-const NAV: { to: string; n: string; label: string }[] = [
-  { to: "/", n: "01", label: "Лента" },
-  { to: "/progress", n: "02", label: "Прогресс" },
-  { to: "/training", n: "03", label: "Тренировка" },
-  { to: "/prepare", n: "04", label: "Подготовка" },
-  { to: "/settings", n: "05", label: "Настройки" },
+const ICONS: Record<string, string> = {
+  feed: "M4 6h16M4 12h16M4 18h10",
+  progress: "M4 19l5-7 4 4 7-9M4 19h16",
+  training: "M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM6 11a6 6 0 0 0 12 0M12 17v4M9 21h6",
+  prepare: "M9 5h6M9 12h6M9 19h6M5 5h.01M5 12h.01M5 19h.01",
+  settings: "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM3 12h2M19 12h2M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4",
+};
+
+function Icon({ d }: { d: string }) {
+  return (
+    <svg className="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={d} />
+    </svg>
+  );
+}
+
+const NAV: { to: string; icon: string; label: string }[] = [
+  { to: "/", icon: "feed", label: "Встречи" },
+  { to: "/progress", icon: "progress", label: "Прогресс" },
+  { to: "/training", icon: "training", label: "Тренировка" },
+  { to: "/prepare", icon: "prepare", label: "Подготовка" },
+  { to: "/settings", icon: "settings", label: "Настройки" },
 ];
 
 function Rail() {
@@ -25,13 +41,14 @@ function Rail() {
   const analyzing = meetings.filter((m) => m.status === "analyzing").length;
   return (
     <aside className="rail">
+      <div className="rail-drag" data-tauri-drag-region />
       <h1 className="brand">
         Ремарка <small>{isTauri ? "" : "mock"}</small>
       </h1>
       <nav>
         {NAV.map((n) => (
           <NavLink key={n.to} to={n.to} end={n.to === "/"} className={({ isActive }) => (isActive ? "active" : "")}>
-            <span className="n">{n.n}</span>
+            <Icon d={ICONS[n.icon]} />
             <span>{n.label}</span>
           </NavLink>
         ))}
@@ -86,6 +103,7 @@ function Shell() {
     <div className="shell">
       <Rail />
       <main className="page-root">
+        <div className="titlebar-drag" data-tauri-drag-region />
         <ScrollTop />
         <Routes>
           <Route path="/" element={<Feed />} />

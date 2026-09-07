@@ -67,7 +67,6 @@ export default function Settings() {
 
   return (
     <div className="page">
-      <p className="eyebrow">Настройки</p>
       <h1 className="title">Как записывать и разбирать</h1>
       <p className="lede">Всё считается локально. Наружу уходит только текст — и только если включён слой смысла.</p>
 
