@@ -381,3 +381,15 @@ Mock‑режим: если `window.__TAURI_INTERNALS__` отсутствует 
 - rust: `cargo build` без ошибок и предупреждений‑ошибок; `cargo test` для tempo/level/db; `npm run tauri dev` поднимает окно, трей, запись микрофона пишет валидный WAV 16 кГц; анализ запускается и события приходят.
 - tap: `tap/build.sh` собирает бинарник; запуск на 5 с при играющем звуке даёт WAV с ненулевым сигналом; JSON‑события корректны.
 - frontend: `npm run build` без ошибок TypeScript; в браузере (`npm run dev`) все экраны работают в mock‑режиме, таймлайн кликабелен, тёмная тема корректна; mock‑отчёт валиден по `docs/report.schema.json` (`npm run check:mock`).
+
+---
+
+## 12. Уточнения после интеграции (де-факто реализовано, зафиксировано 7 сентября 2026)
+
+- **§3 CLI**: у `analyze` есть флаги `--calibration-meetings N` (сколько готовых встреч уже есть, для статуса `calibrating`) и `--no-validate`. Стадии слоя смысла: `meaning` 0–75 %, `summary` 75–100 % внутри своей доли.
+- **§3.2**: `large-v3-turbo` → репозиторий `mobiuslabsgmbh/faster-whisper-large-v3-turbo` (маппинг faster-whisper 1.2.1).
+- **§4.1**: одиночное «а» филлером не считается; знаменатель всех `*_per_min` — моё активное время речи (Σ mic_speech), а не длительность записи; n‑граммы костылей до 3 слов; `hesitation_pause.label = "long"` для пауз ≥ 0,8 с не на границе мысли.
+- **§5**: реальная команда CLI‑бэкенда: `claude -p --output-format json --model <m> --no-session-persistence --system-prompt <s> --tools ""`, промпт в stdin; переменная `REMARKA_CLAUDE_CLI` переопределяет путь к бинарнику (для тестов). Python‑API: `LlmClient(backend, model, api_key, timeout_s)`, `analyze_meaning(report, client, user_meeting_type, progress)`, `summarize(report, client)`, `analyze_patterns(reports, client, training_tasks)`, `prepare_meeting(topic, meeting_type, client)`. При недоступной модели `patterns`/`prepare` возвращают детерминированный результат с `backend: "none"`.
+- **§6.1**: все аргументы команд — snake_case (`#[tauri::command(rename_all = "snake_case")]`); добавлена команда `download_model(asr_model)`; `cancel_recording` эмитит `recording:stopped` с `duration_sec: 0`; `meetings:changed` без payload; тренировка всегда пишется без системного звука. Dev‑хуки (только debug): `REMARKA_IMPORT_WAV`, `REMARKA_IMPORT_SYSTEM_WAV`, `REMARKA_IMPORT_TYPE`, `REMARKA_IMPORT_TITLE`, `REMARKA_DEV_ROUTE`. В PATH процесса движка добавляются `/opt/homebrew/bin`, `/usr/local/bin`, `~/.local/bin`, `~/.claude/local`.
+- **§7**: `CATapDescription(monoGlobalTapButExcludeProcesses:)` принимает `[AudioObjectID]` (не pid — сайдкар сам переводит pid → AudioObjectID); агрегатное устройство состоит только из тапа, `tapautostart=false`; при отсутствии разрешения TCC тап отдаёт нули — сайдкар сам это детектирует и шлёт `error`.
+- **Открытые вопросы**: `Score.overall` при полном отсутствии речи сейчас 0 (в контракте — число; возможно, стоит разрешить `null`); `EngineDoctor.llm_backend_available` означает «`claude` найден в PATH», а не «авторизован».
