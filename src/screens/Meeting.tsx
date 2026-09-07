@@ -231,7 +231,7 @@ function ReportView({ report, card, src, onChanged, onDeleted }: { report: Repor
           <div className="section">
             <div className="section-head">
               <h2 className="h"><span className="num">Три вещи</span>Что поправить в первую очередь</h2>
-              <span className="aside">{mean ? `${mean.backend} · ${mean.model}` : ""}</span>
+              <span className="aside">{mean ? `модель ${mean.model}` : ""}</span>
             </div>
             <ThreeThings report={report} onSeek={seek} />
           </div>
