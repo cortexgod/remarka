@@ -1,6 +1,7 @@
 /* ---------- шапка экрана ---------- */
 .page-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 0 0 18px; }
 .page-head .title { margin: 0; }
+.mt-top .title { margin-bottom: 6px; }
 
 /* ---------- лента ---------- */
 .mlist { display: flex; flex-direction: column; gap: 6px; }

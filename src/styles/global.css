@@ -64,7 +64,7 @@ p:last-child { margin-bottom: 0; }
 /* ---------- типографика ---------- */
 .eyebrow { font-size: 12.5px; color: var(--ink-2); margin: 0 0 4px; }
 .eyebrow.muted { color: var(--ink-3); }
-h1.title { font-size: 22px; font-weight: 700; line-height: 1.25; letter-spacing: -.015em; margin: 0 0 6px; }
+h1.title { font-size: 22px; font-weight: 700; line-height: 1.25; letter-spacing: -.015em; margin: 0 0 16px; }
 h2.h { font-size: 16px; font-weight: 700; line-height: 1.3; margin: 0; letter-spacing: -.01em; }
 h3.h { font-size: 13.5px; font-weight: 700; margin: 0 0 6px; }
 .lede { display: none; }
@@ -220,3 +220,18 @@ kbd.tc, button.tc {
 kbd.tc:hover, button.tc:hover { text-decoration: underline; }
 
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* ---------- сетки и факты (порт из первой версии) ---------- */
+.rule { border: 0; border-top: 1px solid var(--rule); margin: 20px 0; }
+.rule.soft { border-top-color: var(--rule-soft); }
+.col { display: flex; flex-direction: column; gap: 12px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 1000px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+.tablewrap { overflow-x: auto; }
+
+/* факты: полоса «подпись → значение», как полоса показателей */
+.facts { display: flex; flex-wrap: wrap; gap: 6px 36px; margin: 0 0 22px; padding: 14px 18px; background: var(--bg-2); border-radius: var(--radius); }
+.facts > div { min-width: 0; }
+.facts dt { font-size: 11.5px; color: var(--ink-2); margin: 0 0 2px; }
+.facts dd { margin: 0; font-size: 17px; font-weight: 700; line-height: 1.25; letter-spacing: -.01em; }
