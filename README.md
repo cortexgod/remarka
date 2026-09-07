@@ -1,7 +1,129 @@
-# Tauri + React + Typescript
+# Ремарка
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+Десктопное приложение, которое сидит рядом с Zoom, записывает, как ты говоришь на созвоне, и после
+встречи разбирает речь: темп, паузы, слова‑костыли, тон, доля своей речи, перебивания — и три
+конкретные правки с цитатами и таймкодами. Всё считается локально; наружу (по желанию) уходит
+только текст — в слой смысла.
 
-## Recommended IDE Setup
+Продуктовый план — `docs/plan.html`, контракты между компонентами — `docs/CONTRACTS.md`,
+типы данных — `src/types/contracts.ts` (из него генерируются JSON‑схемы в `docs/*.schema.json`).
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+## Из чего состоит
+
+| Каталог | Что это | Технология |
+|---|---|---|
+| `src/` | интерфейс: лента, разбор, прогресс, тренировка, подготовка, настройки, оверлей записи | React 19, TypeScript, Vite |
+| `src-tauri/` | оболочка: запись микрофона, системный звук, SQLite, трей, запуск движка | Rust, Tauri 2, cpal, hound, rusqlite |
+| `tap/` | сайдкар `remarka-tap` — захват системного звука на macOS | Swift 6, Core Audio Process Taps |
+| `engine/` | движок анализа: VAD, распознавание, детектор заполненных пауз, просодия, метрики, оценка, слой смысла | Python 3.11, faster‑whisper, parselmouth, anthropic |
+
+Конвейер: две дорожки WAV (микрофон + система) → Silero VAD → faster‑whisper с таймкодами по словам
+→ детектор «э‑э» по сигналу → Parselmouth (тон, громкость) → детерминированные метрики и оценка
+→ (опционально) языковая модель объясняет числа и приводит три правки с дословными цитатами.
+
+## Требования
+
+- macOS 14.4+ (Core Audio Process Taps для системного звука; Windows — WASAPI loopback, не проверялся)
+- Rust ≥ 1.85 (`rustup`), Node ≥ 22 и npm
+- [uv](https://docs.astral.sh/uv/) и Python 3.11 для движка
+- Xcode Command Line Tools (`swiftc`) для сборки сайдкара
+- ~2 ГБ на диске под модель распознавания (`large-v3-turbo`; для проверки хватит `small`)
+
+## Установка и запуск
+
+```bash
+git clone … remarka && cd remarka
+npm install                              # фронтенд + Tauri CLI
+
+cd engine && uv sync && cd ..            # создаёт engine/.venv с зависимостями движка
+tap/build.sh                             # собирает src-tauri/binaries/remarka-tap-*-apple-darwin
+
+npm run tauri dev                        # окно «Ремарка» + иконка в трее
+```
+
+В dev‑сборке оболочка сама находит `engine/.venv/bin/python` и сайдкар в `src-tauri/binaries/`.
+Модель распознавания докачивается при первом анализе (или заранее: Настройки → «Скачать»,
+либо `cd engine && .venv/bin/python -m remarka_engine download-model --asr-model large-v3-turbo`).
+Проверить окружение: Настройки → «Проверить движок» (`python -m remarka_engine doctor`).
+
+Сборка бандла: `npm run tauri build` (нужны собранные бинарники в `src-tauri/binaries/`).
+
+## Разрешения
+
+- **Микрофон** — macOS спросит при первой записи.
+- **Системный звук** (голоса собеседников) — отдельный переключатель, по умолчанию выключен
+  (риск 03 плана: в ряде юрисдикций нужно согласие всех сторон). При первом включении macOS
+  покажет диалог «Ремарка хочет записывать системный звук» — это разрешение «Запись экрана и
+  системного звука» в Конфиденциальности, но экран приложение не пишет. Без разрешения Core Audio
+  не даёт ошибки, а отдаёт тишину, поэтому сайдкар проверяет TCC сам и сообщает об отказе.
+  В `npm run tauri dev` разрешение привязывается к терминалу/IDE, из которого запущен `cargo`.
+  Без системной дорожки разбор работает целиком, кроме доли речи, перебиваний и вопросов собеседника.
+
+## Где лежат данные
+
+`~/Library/Application Support/com.remarka.app/` (Windows: `%APPDATA%\com.remarka.app\`):
+
+```
+remarka.sqlite                 карточки встреч
+settings.json                  настройки
+baseline.json                  личная база после трёх готовых встреч
+patterns.json                  кэш межвстречных инсайтов
+meetings/<id>/mic.wav          16 кГц моно int16
+meetings/<id>/system.wav       если писали системный звук
+meetings/<id>/report.json      полный отчёт (схема docs/report.schema.json)
+meetings/<id>/engine.log       stderr движка
+```
+
+Аудио не покидает компьютер. Кнопка «Открыть папку данных» — в настройках.
+
+## Слой смысла (LLM)
+
+По умолчанию бэкенд `claude_cli` — используется установленный `claude` CLI и его подписка:
+выполните в терминале `claude login`. Альтернатива — `anthropic_api`: в настройках вставьте ключ,
+он передаётся движку через `ANTHROPIC_API_KEY`. Бэкенд `none` — только метрики, без конспекта
+и трёх правок. В облако уходят транскрипт и посчитанные числа, никогда — аудио.
+
+Модель не измеряет, модель объясняет: каждая правка обязана содержать дословную цитату; движок
+ищет её в транскрипте и выбрасывает рекомендацию без цитаты (`dropped_things`).
+
+Если CLI не авторизован, разбор всё равно строится, а в `engine.log` будет
+`claude CLI: Not logged in · Please run /login`.
+
+## Импорт готовой записи
+
+Настройки → «Импорт записи»: путь к WAV микрофона (и, по желанию, системной дорожки) — файл
+приводится к 16 кГц моно и разбирается как обычная встреча. Для сквозной проверки dev‑сборки
+есть переменные окружения (только `debug`):
+
+```bash
+REMARKA_IMPORT_WAV=engine/tests/fixtures/me.wav \
+REMARKA_IMPORT_SYSTEM_WAV=engine/tests/fixtures/other.wav \
+REMARKA_IMPORT_TITLE="Фикстура" npm run tauri dev
+```
+
+## Тесты
+
+```bash
+cd engine && .venv/bin/python -m pytest -q           # движок (включая прогон модели small на фикстурах)
+REMARKA_RUN_SLOW=1 .venv/bin/python -m pytest -m slow # + живые вызовы модели (нужен claude login)
+cd src-tauri && cargo build && cargo test            # оболочка
+cd tap && swift test                                  # сайдкар
+npm run build && npm run check:mock                   # фронтенд + валидация mock-отчётов по схеме
+```
+
+Фронтенд без оболочки: `npm run dev` → в браузере работает mock‑режим с синтетическими встречами.
+
+Фикстуры движка: `engine/tests/fixtures/me.wav` (моя речь с «э‑э», «как бы», «типа»…) и
+`other.wav` (собеседник задаёт два вопроса), 48 с, синтезированы `say -v Milena`
+(`engine/tests/make_fixtures.sh`).
+
+## Известные ограничения
+
+- Windows: код захвата WASAPI написан, но не собирался и не проверялся.
+- Whisper иногда вычищает «э‑э» — поэтому есть собственный детектор заполненных пауз по сигналу;
+  на живой речи (не TTS) его пороги ещё стоит откалибровать.
+- Диалог выбора файла не подключён — путь для импорта вводится текстом.
+- Google Meet в браузере не детектируется как «идёт звонок» (только Zoom, Teams, Телемост).
+- Слой смысла проверен на подменённом `claude`; живой прогон требует авторизованного CLI.
+- Нет упаковки движка в бандл (PyInstaller): для запуска нужен `engine/.venv` рядом с проектом
+  или путь к python в настройках.

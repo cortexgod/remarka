@@ -1,0 +1,44 @@
+[project]
+name = "remarka-engine"
+version = "0.1.0"
+description = "Ремарка — локальный движок анализа речи на созвонах (VAD, ASR, просодия, метрики)"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = { text = "Proprietary" }
+dependencies = [
+  "faster-whisper>=1.2.1",
+  "ctranslate2>=4.5",
+  "onnxruntime>=1.20",
+  "praat-parselmouth>=0.4.7",
+  "numpy>=2.0",
+  "scipy>=1.14",
+  "soundfile>=0.13",
+  "jsonschema>=4.23",
+  "huggingface-hub>=0.30",
+  "pydantic>=2.0",
+  "anthropic>=1.0",
+]
+
+[project.scripts]
+remarka-engine = "remarka_engine.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["remarka_engine*"]
+
+[tool.setuptools.package-data]
+remarka_engine = ["data/*.json", "prompts/*.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = [
+  "slow: медленные тесты (реальная модель ASR на фикстурах)",
+]
+filterwarnings = ["ignore::DeprecationWarning"]

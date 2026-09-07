@@ -1,0 +1,31 @@
+{"event":"progress","stage":"load","pct":0,"message":"Чтение аудио"}
+{"event":"progress","stage":"load","pct":2,"message":"Аудио прочитано: 00:48"}
+{"event":"progress","stage":"vad","pct":2,"message":"Поиск речи (VAD)"}
+{"event":"progress","stage":"vad","pct":7,"message":"Речь: 00:22 моей, 00:09 собеседника"}
+{"event":"progress","stage":"asr","pct":7,"message":"Загрузка модели small"}
+{"event":"progress","stage":"asr","pct":12,"message":"Распознавание: 00:07 из 00:48"}
+{"event":"progress","stage":"asr","pct":16,"message":"Распознавание: 00:14 из 00:48"}
+{"event":"progress","stage":"asr","pct":20,"message":"Распознавание: 00:20 из 00:48"}
+{"event":"progress","stage":"asr","pct":23,"message":"Распознавание: 00:26 из 00:48"}
+{"event":"progress","stage":"asr","pct":31,"message":"Распознавание: 00:40 из 00:48"}
+{"event":"progress","stage":"asr","pct":50,"message":"Распознавание собеседника: 00:26 из 00:48"}
+{"event":"progress","stage":"asr","pct":62,"message":"Распознавание собеседника: 00:48 из 00:48"}
+{"event":"progress","stage":"asr","pct":62,"message":"Распознавание собеседника: 00:48 из 00:48"}
+{"event":"progress","stage":"asr","pct":62,"message":"Распознано слов: 56"}
+{"event":"progress","stage":"align","pct":62,"message":"Разметка слов и предложений"}
+{"event":"progress","stage":"align","pct":65,"message":"Предложений: 8, реплик собеседника: 2"}
+{"event":"progress","stage":"fillers","pct":65,"message":"Заполненные паузы и слова-костыли"}
+{"event":"progress","stage":"fillers","pct":70,"message":"Заполненных пауз: 4, костылей: 5"}
+{"event":"progress","stage":"prosody","pct":70,"message":"Просодия: тон и громкость"}
+{"event":"progress","stage":"prosody","pct":80,"message":"Просодия посчитана"}
+{"event":"progress","stage":"metrics","pct":80,"message":"Метрики"}
+{"event":"progress","stage":"metrics","pct":85,"message":"Оценка: 70"}
+{"event":"progress","stage":"meaning","pct":85,"message":"Слой смысла (claude_cli)"}
+{"event":"progress","stage":"meaning","pct":85,"message":"Слой смысла: готовлю транскрипт и метрики"}
+{"event":"progress","stage":"meaning","pct":86,"message":"Слой смысла: запрос к модели"}
+{"event":"log","level":"warn","message":"Слой смысла не отработал, отчёт без него: claude CLI: Not logged in · Please run /login"}
+{"event":"progress","stage":"meaning","pct":95,"message":"Слой смысла пропущен"}
+{"event":"progress","stage":"summary","pct":98,"message":"Конспект пропущен"}
+{"event":"progress","stage":"write","pct":98,"message":"Запись отчёта"}
+{"event":"progress","stage":"write","pct":100,"message":"Готово"}
+{"event":"done","out":"/tmp/remarka_fixture_report.json"}

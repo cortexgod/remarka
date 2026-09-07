@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>NSMicrophoneUsageDescription</key>
+  <string>Ремарка записывает ваш микрофон во время созвона, чтобы после встречи разобрать вашу речь: темп, паузы, слова-костыли. Аудио не покидает компьютер.</string>
+  <key>NSAudioCaptureUsageDescription</key>
+  <string>Ремарка записывает системный звук (голоса собеседников), чтобы посчитать долю вашей речи, перебивания и вопросы. Включается отдельным переключателем и по умолчанию выключено.</string>
+  <key>LSMinimumSystemVersion</key>
+  <string>14.4</string>
+  <key>CFBundleDisplayName</key>
+  <string>Ремарка</string>
+</dict>
+</plist>

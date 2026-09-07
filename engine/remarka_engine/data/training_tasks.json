@@ -1,0 +1,82 @@
+[
+  {
+    "id": "elevator_60",
+    "title": "Лифт: 60 секунд без «э-э»",
+    "instruction": "Расскажи о своём проекте за 60 секунд, ни одной заполненной паузы. Если чувствуешь, что сейчас будет «э-э» — просто помолчи.",
+    "duration_sec": 60,
+    "targets_metric": "layer1.filled_pauses_per_min",
+    "meeting_type": "training"
+  },
+  {
+    "id": "slow_120",
+    "title": "Темп 100–120",
+    "instruction": "Прочитай или расскажи что угодно две минуты в темпе 100–120 слов в минуту. Ориентир: примерно два слова в секунду, не быстрее.",
+    "duration_sec": 120,
+    "targets_metric": "layer1.wpm",
+    "meeting_type": "training"
+  },
+  {
+    "id": "pauses_90",
+    "title": "Пауза после каждой мысли",
+    "instruction": "Объясни сложную вещь (как работает что-то из твоей работы), делая паузу не меньше секунды после каждой законченной мысли. Пауза — это не провал, это точка.",
+    "duration_sec": 90,
+    "targets_metric": "layer1.structural_pauses_per_min",
+    "meeting_type": "training"
+  },
+  {
+    "id": "pitch_range_60",
+    "title": "История с интонацией",
+    "instruction": "Расскажи короткую историю с выраженной интонацией: диапазон тона должен быть не меньше 6 полутонов. Выделяй голосом главное слово в каждой фразе.",
+    "duration_sec": 60,
+    "targets_metric": "layer2.pitch_range_st",
+    "meeting_type": "training"
+  },
+  {
+    "id": "endings_60",
+    "title": "Договаривай окончания",
+    "instruction": "Договаривай окончания: последнее слово каждой фразы должно звучать не тише её середины. Представь, что последнее слово — самое важное.",
+    "duration_sec": 60,
+    "targets_metric": "layer2.phrase_final_decay_db",
+    "meeting_type": "training"
+  },
+  {
+    "id": "no_crutch_90",
+    "title": "Почему ваш продукт лучше — без костылей",
+    "instruction": "Ответь на вопрос «почему ваш продукт лучше» без слов-костылей: никаких «как бы», «типа», «на самом деле», «вот», «собственно», «короче».",
+    "duration_sec": 90,
+    "targets_metric": "layer1.crutch_words_per_min",
+    "meeting_type": "training"
+  },
+  {
+    "id": "statement_60",
+    "title": "Десять утверждений вниз",
+    "instruction": "Произнеси десять утверждений о своей работе с нисходящей интонацией в конце. Утверждение не должно звучать как вопрос: голос в конце фразы идёт вниз.",
+    "duration_sec": 60,
+    "targets_metric": "layer2.rising_statements_share",
+    "meeting_type": "training"
+  },
+  {
+    "id": "answer_45",
+    "title": "Юнит-экономика за 45 секунд",
+    "instruction": "Ответь на вопрос про юнит-экономику за 45 секунд, не уходя в размер рынка. Назови цену, стоимость привлечения, маржу — и остановись.",
+    "duration_sec": 45,
+    "targets_metric": null,
+    "meeting_type": "training"
+  },
+  {
+    "id": "short_sentences_90",
+    "title": "Короткие предложения",
+    "instruction": "Опиши, чем ты занимался на этой неделе, предложениями не длиннее 12 слов. Точка — раньше, чем кажется нужным.",
+    "duration_sec": 90,
+    "targets_metric": "layer1.long_sentences_share",
+    "meeting_type": "training"
+  },
+  {
+    "id": "no_hesitation_60",
+    "title": "Без запинок внутри фразы",
+    "instruction": "Расскажи о вчерашнем дне так, чтобы паузы были только между фразами, а не внутри них. Если сбился — закончи фразу и начни новую.",
+    "duration_sec": 60,
+    "targets_metric": "layer1.hesitation_pauses_per_min",
+    "meeting_type": "training"
+  }
+]

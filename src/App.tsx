@@ -1,51 +1,126 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
-import "./App.css";
+import { HashRouter, NavLink, Route, Routes, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import { StoreProvider, useStore } from "./lib/store";
+import { isTauri } from "./lib/api";
+import { fmtTime } from "./lib/format";
+import Feed from "./screens/Feed";
+import Meeting from "./screens/Meeting";
+import Progress from "./screens/Progress";
+import Training from "./screens/Training";
+import Prepare from "./screens/Prepare";
+import Settings from "./screens/Settings";
+import Overlay from "./screens/Overlay";
 
-function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+const NAV: { to: string; n: string; label: string }[] = [
+  { to: "/", n: "01", label: "Лента" },
+  { to: "/progress", n: "02", label: "Прогресс" },
+  { to: "/training", n: "03", label: "Тренировка" },
+  { to: "/prepare", n: "04", label: "Подготовка" },
+  { to: "/settings", n: "05", label: "Настройки" },
+];
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
-
+function Rail() {
+  const { appState, tick, meetings } = useStore();
+  const rec = appState?.recording;
+  const analyzing = meetings.filter((m) => m.status === "analyzing").length;
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <aside className="rail">
+      <h1 className="brand">
+        Ремарка <small>{isTauri ? "" : "mock"}</small>
+      </h1>
+      <nav>
+        {NAV.map((n) => (
+          <NavLink key={n.to} to={n.to} end={n.to === "/"} className={({ isActive }) => (isActive ? "active" : "")}>
+            <span className="n">{n.n}</span>
+            <span>{n.label}</span>
+          </NavLink>
+        ))}
+      </nav>
+      <div className="spacer" />
+      <div className="rail-foot">
+        {rec ? (
+          <div>
+            <span className="dot rec" />
+            запись {fmtTime(tick?.elapsed_sec ?? rec.elapsed_sec)}
+          </div>
+        ) : analyzing ? (
+          <div>
+            <span className="dot" />
+            анализ · {analyzing}
+          </div>
+        ) : (
+          <div>
+            <span className={"dot" + (appState && !appState.engine_ok ? " bad" : "")} />
+            {appState ? (appState.engine_ok ? "движок готов" : "движок не найден") : "…"}
+          </div>
+        )}
       </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+    </aside>
   );
 }
 
-export default App;
+function Toasts() {
+  const { toasts } = useStore();
+  if (!toasts.length) return null;
+  return (
+    <div className="toasts">
+      {toasts.map((t) => (
+        <div key={t.id} className={"toast" + (t.kind === "err" ? " err" : "")}>
+          {t.text}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ScrollTop() {
+  const loc = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [loc.pathname]);
+  return null;
+}
+
+function Shell() {
+  return (
+    <div className="shell">
+      <Rail />
+      <main className="page-root">
+        <ScrollTop />
+        <Routes>
+          <Route path="/" element={<Feed />} />
+          <Route path="/meeting/:id" element={<Meeting />} />
+          <Route path="/progress" element={<Progress />} />
+          <Route path="/training" element={<Training />} />
+          <Route path="/prepare" element={<Prepare />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="*" element={<Feed />} />
+        </Routes>
+      </main>
+      <Toasts />
+    </div>
+  );
+}
+
+function Root() {
+  const isOverlay = window.location.hash.startsWith("#/overlay");
+  useEffect(() => {
+    document.body.classList.toggle("overlay-body", isOverlay);
+  }, [isOverlay]);
+  return (
+    <Routes>
+      <Route path="/overlay" element={<Overlay />} />
+      <Route path="*" element={<Shell />} />
+    </Routes>
+  );
+}
+
+export default function App() {
+  return (
+    <StoreProvider>
+      <HashRouter>
+        <Root />
+      </HashRouter>
+    </StoreProvider>
+  );
+}

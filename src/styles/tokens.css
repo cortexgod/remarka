@@ -1,0 +1,65 @@
+/* Токены дизайна — ровно из docs/plan.html (§9 CONTRACTS.md) */
+:root {
+  --ground: #EDEEF0;
+  --surface: #F8F9FA;
+  --surface-2: #E3E5E9;
+  --ink: #14171C;
+  --ink-2: #575E6A;
+  --ink-3: #848C99;
+  --rule: #D2D6DC;
+  --rule-soft: #DEE1E6;
+  --signal: #B31D42;
+  --signal-ink: #A81B3E;
+  --signal-wash: rgba(179, 29, 66, .09);
+  --ok: #2C6E52;
+  --warn: #8E6415;
+  --shadow: 0 1px 2px rgba(20, 23, 28, .06), 0 8px 24px -12px rgba(20, 23, 28, .18);
+
+  --f-display: "Unbounded", "Golos Text", system-ui, sans-serif;
+  --f-body: "Golos Text", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --col: min(68ch, 100%);
+  --pad: clamp(20px, 3vw, 40px);
+  --rail-w: 206px;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #101317;
+    --surface: #171B21;
+    --surface-2: #1F242C;
+    --ink: #E9EBEE;
+    --ink-2: #9BA3AF;
+    --ink-3: #6E7784;
+    --rule: #272D36;
+    --rule-soft: #20262E;
+    --signal: #F2506F;
+    --signal-ink: #FF7B95;
+    --signal-wash: rgba(242, 80, 111, .13);
+    --ok: #5FBE92;
+    --warn: #D4A24C;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px -16px rgba(0, 0, 0, .6);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground: #101317;
+  --surface: #171B21;
+  --surface-2: #1F242C;
+  --ink: #E9EBEE;
+  --ink-2: #9BA3AF;
+  --ink-3: #6E7784;
+  --rule: #272D36;
+  --rule-soft: #20262E;
+  --signal: #F2506F;
+  --signal-ink: #FF7B95;
+  --signal-wash: rgba(242, 80, 111, .13);
+  --ok: #5FBE92;
+  --warn: #D4A24C;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px -16px rgba(0, 0, 0, .6);
+  color-scheme: dark;
+}

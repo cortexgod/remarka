@@ -1,0 +1,107 @@
+{
+  "_comment": "Ориентиры по типам встреч (§4.5). null = граница отсутствует; если обе null — метрика не оценивается (status na, вес 0). Тип наследует default, переопределяя ключи.",
+  "units": {
+    "wpm": "сл/мин",
+    "articulation_wpm": "сл/мин",
+    "filled_pauses_total": "",
+    "filled_pauses_per_min": "в мин",
+    "crutch_words_total": "",
+    "crutch_words_per_min": "в мин",
+    "structural_pauses_per_min": "в мин",
+    "hesitation_pauses_per_min": "в мин",
+    "talk_ratio": "",
+    "mean_sentence_len": "слов",
+    "long_sentences_share": "",
+    "mtld": "",
+    "interruptions_by_me": "",
+    "interruptions_by_other": "",
+    "my_speech_sec": "с",
+    "other_speech_sec": "с",
+    "words_total": "слов",
+    "pitch_median_hz": "Гц",
+    "pitch_range_st": "пт",
+    "phrase_final_decay_db": "дБ",
+    "rising_statements_share": "",
+    "jitter_pct": "%",
+    "shimmer_pct": "%",
+    "start_jitter_ratio": "",
+    "loudness_drift_db": "дБ",
+    "loudness_mean_db": "дБ"
+  },
+  "default": {
+    "wpm": { "low": 100, "high": 130, "better": "inside" },
+    "articulation_wpm": { "low": 130, "high": 170, "better": "inside" },
+    "filled_pauses_per_min": { "low": null, "high": 3, "better": "lower" },
+    "crutch_words_per_min": { "low": null, "high": 2, "better": "lower" },
+    "structural_pauses_per_min": { "low": 3, "high": 6, "better": "inside" },
+    "hesitation_pauses_per_min": { "low": null, "high": 4, "better": "lower" },
+    "talk_ratio": { "low": 0.4, "high": 0.7, "better": "inside" },
+    "mean_sentence_len": { "low": null, "high": 22, "better": "lower" },
+    "long_sentences_share": { "low": null, "high": 0.2, "better": "lower" },
+    "mtld": { "low": 60, "high": null, "better": "higher" },
+    "interruptions_by_me": { "low": null, "high": 2, "better": "lower" },
+    "interruptions_by_other": { "low": null, "high": null, "better": "lower" },
+    "pitch_range_st": { "low": 4, "high": null, "better": "higher" },
+    "phrase_final_decay_db": { "low": null, "high": 6, "better": "lower" },
+    "rising_statements_share": { "low": null, "high": 0.15, "better": "lower" },
+    "loudness_drift_db": { "low": -3, "high": null, "better": "higher" },
+    "jitter_pct": { "low": null, "high": null, "better": "lower" },
+    "shimmer_pct": { "low": null, "high": null, "better": "lower" },
+    "start_jitter_ratio": { "low": null, "high": null, "better": "lower" },
+    "pitch_median_hz": { "low": null, "high": null, "better": "inside" },
+    "loudness_mean_db": { "low": null, "high": null, "better": "inside" },
+    "filled_pauses_total": { "low": null, "high": null, "better": "lower" },
+    "crutch_words_total": { "low": null, "high": null, "better": "lower" },
+    "my_speech_sec": { "low": null, "high": null, "better": "inside" },
+    "other_speech_sec": { "low": null, "high": null, "better": "inside" },
+    "words_total": { "low": null, "high": null, "better": "inside" }
+  },
+  "pitch": {
+    "wpm": { "low": 110, "high": 140, "better": "inside" },
+    "filled_pauses_per_min": { "low": null, "high": 2, "better": "lower" },
+    "talk_ratio": { "low": 0.7, "high": 0.8, "better": "inside" }
+  },
+  "demo": {
+    "wpm": { "low": 110, "high": 140, "better": "inside" },
+    "talk_ratio": { "low": 0.6, "high": 0.75, "better": "inside" }
+  },
+  "sales": {
+    "talk_ratio": { "low": 0.4, "high": 0.45, "better": "inside" },
+    "interruptions_by_me": { "low": null, "high": 1, "better": "lower" }
+  },
+  "interview": {
+    "filled_pauses_per_min": { "low": null, "high": 2, "better": "lower" },
+    "talk_ratio": { "low": 0.5, "high": 0.7, "better": "inside" },
+    "interruptions_by_me": { "low": null, "high": 1, "better": "lower" }
+  },
+  "standup": {
+    "wpm": { "low": 110, "high": 150, "better": "inside" },
+    "filled_pauses_per_min": { "low": null, "high": 4, "better": "lower" },
+    "crutch_words_per_min": { "low": null, "high": 3, "better": "lower" },
+    "talk_ratio": { "low": 0.1, "high": 0.4, "better": "inside" },
+    "mtld": { "low": null, "high": null, "better": "higher" }
+  },
+  "lecture": {
+    "wpm": { "low": 90, "high": 120, "better": "inside" },
+    "articulation_wpm": { "low": 120, "high": 160, "better": "inside" },
+    "filled_pauses_per_min": { "low": null, "high": 2, "better": "lower" },
+    "structural_pauses_per_min": { "low": 4, "high": 8, "better": "inside" },
+    "talk_ratio": { "low": 0.85, "high": 1.0, "better": "inside" },
+    "mtld": { "low": 70, "high": null, "better": "higher" },
+    "pitch_range_st": { "low": 5, "high": null, "better": "higher" }
+  },
+  "one_on_one": {
+    "filled_pauses_per_min": { "low": null, "high": 4, "better": "lower" },
+    "crutch_words_per_min": { "low": null, "high": 3, "better": "lower" },
+    "talk_ratio": { "low": 0.4, "high": 0.6, "better": "inside" }
+  },
+  "training": {
+    "filled_pauses_per_min": { "low": null, "high": 1, "better": "lower" },
+    "crutch_words_per_min": { "low": null, "high": 1, "better": "lower" },
+    "hesitation_pauses_per_min": { "low": null, "high": 3, "better": "lower" },
+    "talk_ratio": { "low": null, "high": null, "better": "inside" },
+    "mtld": { "low": null, "high": null, "better": "higher" },
+    "interruptions_by_me": { "low": null, "high": null, "better": "lower" }
+  },
+  "other": {}
+}
