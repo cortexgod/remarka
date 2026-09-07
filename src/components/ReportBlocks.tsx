@@ -1,5 +1,5 @@
 /** Блоки экрана разбора: KPI, «Три вещи», просодия, вопросы, конспект, база, таблица метрик. */
-import { memo, useMemo } from "react";
+import { memo, useMemo, useState } from "react";
 import type { Report, TimePoint } from "../types/contracts";
 import { fmtDur, fmtNum, fmtPct, fmtSigned, fmtTime, typeLabel } from "../lib/format";
 import { METRIC_DEFS, METRIC_BY_KEY, STATUS_TEXT, fmtMetricFull, fmtMetricValue, getMetric, higherIsBetter, metricLabel, refText } from "../lib/metrics";
@@ -55,20 +55,18 @@ export function ThreeThings({ report, onSeek }: { report: Report; onSeek: Seek }
   const mean = report.meaning;
   if (!mean) {
     const reason = report.engine.warnings.find((w) => w.startsWith("Слой смысла"));
-    const needLogin = !!reason && /not logged in|не авторизован|\/login/i.test(reason);
+    const words = report.transcript.words.length;
     return (
       <div className="note soft">
-        {reason ? (
+        {words < 30 ? (
+          <p>Запись слишком короткая для советов — нужно хотя бы полминуты речи.</p>
+        ) : reason ? (
           <>
-            <p>{reason.replace(", отчёт без него", "").replace(/claude CLI:\s*Not logged in.*$/i, "claude CLI не авторизован")}</p>
-            <p className="muted">
-              {needLogin
-                ? "Выполните в терминале команду claude login, затем нажмите «Пересчитать» — появятся три правки с цитатами, конспект и ответы на вопросы."
-                : "Проверьте настройки слоя смысла (бэкенд, ключ) и нажмите «Пересчитать»."}
-            </p>
+            <p>Советы не построились: {/недоступен|не отвечает|HTTP|занят|вовремя/i.test(reason) ? "не удалось связаться с сервером советов" : "что-то пошло не так"}.</p>
+            <p className="muted">Проверь интернет и нажми «Разобрать заново» — цифры и транскрипт уже здесь, появятся только советы, конспект и ответы на вопросы.</p>
           </>
         ) : (
-          <p>Слой смысла выключен в настройках — правки с цитатами, конспект и оценка ответов не строились.</p>
+          <p>Советы для этой записи не строились. Нажми «Разобрать заново».</p>
         )}
       </div>
     );
@@ -334,6 +332,7 @@ export function BaselineBlock({ report }: { report: Report }) {
 }
 
 export function MetricsTable({ report }: { report: Report }) {
+  const [showAll, setShowAll] = useState(false);
   const groups: { g: "layer1" | "layer2"; title: string }[] = [
     { g: "layer1", title: "По словам" },
     { g: "layer2", title: "По голосу" },
@@ -351,10 +350,11 @@ export function MetricsTable({ report }: { report: Report }) {
         </thead>
         <tbody>
           {groups.map(({ g, title }) => (
-            <GroupRows key={g} title={title} report={report} keys={METRIC_DEFS.filter((d) => d.group === g).map((d) => d.key)} />
+            <GroupRows key={g} title={title} report={report} keys={METRIC_DEFS.filter((d) => d.group === g).map((d) => d.key)} showAll={showAll} />
           ))}
         </tbody>
       </table>
+      <button className="btn link" style={{ marginTop: 8 }} onClick={() => setShowAll((v) => !v)}>{showAll ? "Скрыть подробные показатели" : "Показать все показатели"}</button>
       {top.length > 0 && (
         <div className="crutch-top">
           <span className="label">Слова‑костыли</span>
@@ -374,7 +374,7 @@ export function MetricsTable({ report }: { report: Report }) {
   );
 }
 
-function GroupRows({ title, report, keys }: { title: string; report: Report; keys: string[] }) {
+function GroupRows({ title, report, keys, showAll }: { title: string; report: Report; keys: string[]; showAll: boolean }) {
   return (
     <>
       <tr className="group">
@@ -384,6 +384,7 @@ function GroupRows({ title, report, keys }: { title: string; report: Report; key
         const def = METRIC_BY_KEY[key];
         const mv = getMetric(report.metrics, key);
         if (!mv) return null;
+        if (def.advanced && !showAll) return null;
         return (
           <tr key={key} title={`${def.how} · ${STATUS_TEXT[mv.status]}`}>
             <td className="metric">

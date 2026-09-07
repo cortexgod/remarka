@@ -299,12 +299,7 @@ function ReportView({ report, card, src, onChanged, onDeleted }: { report: Repor
             <button className={"tabbtn" + (tab === "score" ? " on" : "")} onClick={() => setTab("score")}>Из чего оценка</button>
           </div>
           {tab === "metrics" ? <MetricsTable report={report} /> : <ScoreBreakdown report={report} />}
-          <div className="engine-info hint">
-            {report.engine.asr_backend} · {report.engine.asr_model} · обработка {fmtDur(report.engine.processing_sec)}
-            {report.engine.warnings.map((w, i) => (
-              <div key={i} className="warn">{w}</div>
-            ))}
-          </div>
+
         </aside>
       </div>
     </div>

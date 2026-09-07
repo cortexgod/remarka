@@ -1,0 +1,15 @@
+[Unit]
+Description=Remarka LLM relay (claude -p over HTTPS)
+After=network-online.target
+
+[Service]
+User=assistant
+Environment=REMARKA_TOKEN=<секрет>
+Environment=REMARKA_PORT=8787
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 /opt/remarka-llm/server.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

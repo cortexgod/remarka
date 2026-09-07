@@ -18,7 +18,7 @@ from typing import Any
 from . import __version__, asr
 from .protocol import Cancelled, Emitter, install_cancel_handlers, log_stderr
 
-LLM_BACKENDS = ["claude_cli", "anthropic_api", "none"]
+LLM_BACKENDS = ["auto", "remote", "claude_cli", "anthropic_api", "none"]
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -27,7 +27,7 @@ def build_parser() -> argparse.ArgumentParser:
     sub = p.add_subparsers(dest="cmd", required=True)
 
     def add_llm(sp: argparse.ArgumentParser) -> None:
-        sp.add_argument("--llm", choices=LLM_BACKENDS, default="none")
+        sp.add_argument("--llm", choices=LLM_BACKENDS, default="auto")
         sp.add_argument("--llm-model", default="claude-opus-5")
 
     a = sub.add_parser("analyze", help="анализ записи → report.json")
@@ -72,7 +72,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     d = sub.add_parser("doctor", help="проверка окружения")
     d.add_argument("--asr-model", default=asr.DEFAULT_MODEL)
-    d.add_argument("--llm", choices=LLM_BACKENDS, default="none")
+    d.add_argument("--llm", choices=LLM_BACKENDS, default="auto")
 
     dl = sub.add_parser("download-model", help="скачать модель ASR в кэш")
     dl.add_argument("--asr-model", default=asr.DEFAULT_MODEL)

@@ -52,7 +52,8 @@ __all__ = [
     "log",
 ]
 
-BACKENDS = ("anthropic_api", "claude_cli", "none")
+BACKENDS = ("remote", "anthropic_api", "claude_cli", "none")
+RELAY_TIMEOUT_S = 300.0
 DEFAULT_MODEL = "claude-opus-5"
 MAX_TOKENS = 16000
 DEFAULT_TIMEOUT_S = 180.0
@@ -152,6 +153,52 @@ def render_prompt(template: str, **values: Any) -> str:
 # ---------------------------------------------------------------------------
 
 
+def relay_config() -> dict[str, str] | None:
+    """Адрес, токен и сертификат LLM-ретранслятора (data/relay.json). None — не настроен."""
+    p = Path(__file__).resolve().parent / "data" / "relay.json"
+    env_url = os.environ.get("REMARKA_RELAY_URL")
+    try:
+        cfg = json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
+    except Exception:  # noqa: BLE001
+        cfg = {}
+    if env_url:
+        cfg["url"] = env_url
+    if os.environ.get("REMARKA_RELAY_TOKEN"):
+        cfg["token"] = os.environ["REMARKA_RELAY_TOKEN"]
+    return cfg if cfg.get("url") else None
+
+
+def _relay_ssl_context(cfg: dict[str, str]):
+    import ssl
+
+    pem = cfg.get("cert_pem")
+    if pem:
+        ctx = ssl.create_default_context()
+        ctx.load_verify_locations(cadata=pem)
+        # самоподписанный сертификат сервера: проверяем именно его, не имя хоста
+        ctx.check_hostname = False
+        return ctx
+    return ssl.create_default_context()
+
+
+def relay_health(timeout_s: float = 8.0) -> tuple[bool, str]:
+    """GET /v1/health у ретранслятора."""
+    import urllib.request
+
+    cfg = relay_config()
+    if not cfg:
+        return False, "сервер советов не настроен"
+    try:
+        req = urllib.request.Request(cfg["url"].rstrip("/") + "/v1/health")
+        with urllib.request.urlopen(req, timeout=timeout_s, context=_relay_ssl_context(cfg)) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        if data.get("ok"):
+            return True, "сервер советов отвечает"
+        return False, "сервер советов не готов"
+    except Exception as exc:  # noqa: BLE001
+        return False, f"сервер советов недоступен: {str(exc)[:120]}"
+
+
 def has_api_credentials(api_key: str | None = None) -> bool:
     """Есть ли чем авторизоваться в Anthropic API (ключ аргументом или в окружении)."""
     return bool(api_key or os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN"))
@@ -169,10 +216,14 @@ def is_available(backend: str, model: str = DEFAULT_MODEL, ping: bool = False) -
     По умолчанию проверяет только ключ / наличие ``claude`` в PATH. ``ping=True`` — короткий
     реальный вызов (проверяет авторизацию и сеть; для claude_cli без повторов, ~2 с при отказе).
     """
+    if backend == "auto":
+        backend = detect_backend("auto")
     if backend == "none":
         return True, "LLM выключен"
     if backend not in BACKENDS:
         return False, f"неизвестный LLM-бэкенд: {backend}"
+    if backend == "remote":
+        return relay_health()
     client = LlmClient(backend, model=model)
     if backend == "anthropic_api":
         if anthropic is None:
@@ -200,6 +251,10 @@ def detect_backend(preferred: str | None, api_key: str | None = None) -> str:
     """
     if preferred == "none":
         return "none"
+    if preferred == "remote" and relay_config():
+        return "remote"
+    if preferred in (None, "auto") and relay_config():
+        return "remote"
     if preferred == "anthropic_api" and anthropic is not None and has_api_credentials(api_key):
         return "anthropic_api"
     if preferred == "claude_cli" and find_cli():
@@ -311,6 +366,8 @@ class LlmClient:
         return {"backend": self.backend, "model": self.model}
 
     def available(self) -> bool:
+        if self.backend == "remote":
+            return relay_config() is not None
         if self.backend == "anthropic_api":
             return anthropic is not None and has_api_credentials(self.api_key)
         if self.backend == "claude_cli":
@@ -343,9 +400,58 @@ class LlmClient:
         if self.backend == "none":
             raise LlmUnavailableError("LLM-бэкенд выключен (none)")
         self.calls += 1
+        if self.backend == "remote":
+            return self._complete_remote(system, user, schema_model)
         if self.backend == "anthropic_api":
             return self._complete_api(system, user, schema_model)
         return self._complete_cli(system, user, schema_model)
+
+    # -- remote (ретранслятор на сервере) -----------------------------------
+
+    def _run_remote(self, system: str, user_text: str) -> str:
+        import urllib.error
+        import urllib.request
+
+        cfg = relay_config()
+        if not cfg:
+            raise LlmUnavailableError("сервер советов не настроен")
+        body = json.dumps({"system": system, "user": user_text, "model": self.model, "timeout": min(self.timeout_s, RELAY_TIMEOUT_S)}, ensure_ascii=False).encode("utf-8")
+        req = urllib.request.Request(cfg["url"].rstrip("/") + "/v1/complete", data=body, method="POST")
+        req.add_header("Content-Type", "application/json; charset=utf-8")
+        if cfg.get("token"):
+            req.add_header("X-Remarka-Token", cfg["token"])
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout_s + 30, context=_relay_ssl_context(cfg)) as resp:
+                raw = resp.read().decode("utf-8")
+        except urllib.error.HTTPError as exc:
+            try:
+                detail = json.loads(exc.read().decode("utf-8")).get("error")
+            except Exception:  # noqa: BLE001
+                detail = None
+            raise LlmError(f"сервер советов: {detail or exc.reason} (HTTP {exc.code})") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise LlmError(f"сервер советов недоступен: {str(exc)[:200]}") from exc
+        self.last_raw = raw
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise LlmError("сервер советов вернул не JSON") from exc
+        if not data.get("ok"):
+            raise LlmError(f"сервер советов: {str(data.get('error') or 'ошибка')[:300]}")
+        return str(data.get("result") or "")
+
+    def _complete_remote(self, system: str, user: str, schema_model: type[ModelT]) -> ModelT:
+        user_text = user
+        last_error: Exception | None = None
+        for attempt in (1, 2):
+            result_text = self._run_remote(system, user_text)
+            try:
+                return _validate(schema_model, None, result_text)
+            except (pydantic.ValidationError, json.JSONDecodeError, ValueError) as exc:
+                last_error = exc
+                log(f"remote: ответ не по схеме (попытка {attempt}): {str(exc)[:300]}", "warn")
+                user_text = f"{user}\n\n{STRICT_JSON_HINT}\n{schema_hint(schema_model)}"
+        raise LlmParseError(f"remote: ответ модели не по схеме {schema_model.__name__}: {last_error}")
 
     # -- anthropic_api ------------------------------------------------------
 

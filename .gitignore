@@ -34,3 +34,6 @@ tap/.build/
 
 # локальные настройки SSH-обёртки
 scripts/claude-ssh.env
+
+# адрес и токен LLM-ретранслятора (не в git, но в сборке)
+engine/remarka_engine/data/relay.json

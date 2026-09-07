@@ -3,10 +3,7 @@
 //! автоматическая калибровка (baseline) после 3 готовых встреч.
 
 use crate::db::ReportSummary;
-use crate::models::{
-    events, EngineDoctor, EngineEvent, EvAnalysisDone, EvAnalysisError, EvAnalysisProgress,
-    LlmBackend, MeetingStatus, MeetingType, Settings, TypeSource,
-};
+use crate::models::{events, EngineDoctor, EngineEvent, EvAnalysisDone, EvAnalysisError, EvAnalysisProgress, MeetingStatus, MeetingType, Settings, TypeSource};
 use crate::paths::exe_dir;
 use crate::state::AppState;
 use crate::util::{lock, tail_lines};
@@ -600,12 +597,10 @@ fn run_analysis(app: &AppHandle, job: &AnalyzeJob, pid_slot: &Arc<Mutex<Option<u
         let ready = lock(&state.db).count_ready_non_training().unwrap_or(0);
         cmd.arg("--calibration-meetings").arg(ready.to_string());
     }
-    let llm = if job.llm {
-        settings.llm_backend
-    } else {
-        LlmBackend::None
-    };
-    cmd.arg("--llm").arg(llm.as_str());
+    // выбор бэкенда спрятан от пользователя: движок сам берёт сервер советов, иначе локальный claude
+    let llm = if job.llm { "auto" } else { "none" };
+    let _ = settings.llm_backend;
+    cmd.arg("--llm").arg(llm);
     cmd.arg("--llm-model").arg(&settings.llm_model);
     cmd.arg("--asr-model")
         .arg(&settings.asr_model)
@@ -893,7 +888,7 @@ pub fn doctor(app: &AppHandle) -> EngineDoctor {
         "--asr-model",
         &settings.asr_model,
         "--llm",
-        settings.llm_backend.as_str(),
+        "auto",
     ]);
     let log_path = paths.engine_shared_log();
     match run_streaming(

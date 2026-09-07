@@ -66,6 +66,8 @@ def make_llm_client(backend: str, model: str) -> Any:
     client_cls = getattr(llm, "LlmClient", None)
     if client_cls is None:
         return None
+    if backend in ("auto", "remote") and callable(getattr(llm, "detect_backend", None)):
+        backend = llm.detect_backend(backend)
     try:
         return client_cls(backend=backend, model=model)
     except TypeError:

@@ -292,6 +292,7 @@ def test_detect_backend(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     monkeypatch.delenv("ANTHROPIC_AUTH_TOKEN", raising=False)
     monkeypatch.setattr(L, "find_cli", lambda cli_path=None: None)
+    monkeypatch.setattr(L, "relay_config", lambda: None)
     assert detect_backend(None) == "none"
     assert detect_backend("claude_cli") == "none"
     monkeypatch.setattr(L, "find_cli", lambda cli_path=None: "/usr/local/bin/claude")
@@ -302,6 +303,12 @@ def test_detect_backend(monkeypatch: pytest.MonkeyPatch) -> None:
     assert detect_backend("claude_cli") == "claude_cli"
     assert detect_backend("none") == "none"
     assert detect_backend(None, api_key="sk-y") == "anthropic_api"
+    # сервер советов настроен — он главнее всего при auto/None
+    monkeypatch.setattr(L, "relay_config", lambda: {"url": "https://relay", "token": "t"})
+    assert detect_backend(None) == "remote"
+    assert detect_backend("auto") == "remote"
+    assert detect_backend("claude_cli") == "claude_cli"
+    assert detect_backend("none") == "none"
 
 
 def test_is_available_for_doctor(monkeypatch: pytest.MonkeyPatch) -> None:
