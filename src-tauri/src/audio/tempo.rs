@@ -9,13 +9,16 @@ use std::collections::VecDeque;
 
 const FRAME_MS: usize = 10;
 const WINDOW_SEC: usize = 10;
-const SMOOTH_FRAMES: usize = 5; // 50 мс
-const MIN_PEAK_DISTANCE_FRAMES: usize = 10; // 100 мс
-const PROMINENCE_DB: f32 = 3.0;
+const SMOOTH_FRAMES: usize = 3; // 30 мс
+const MIN_PEAK_DISTANCE_FRAMES: usize = 6; // 60 мс
+const PROMINENCE_DB: f32 = 1.5;
 const SILENCE_MARGIN_DB: f32 = 6.0;
 const DILATE_FRAMES: usize = 20; // ±200 мс вокруг активных кадров = «речь»
 const MIN_SPEECH_SEC: f32 = 2.0;
 pub const SYLLABLES_PER_WORD: f32 = 2.7;
+/// Доля слоговых ядер, которую детектор реально находит в живой речи (калибровка по записи
+/// с известным темпом по ASR: 82 → 144 сл/мин при recall ≈ 0,6; для чистого TTS recall выше).
+pub const DETECTION_RECALL: f32 = 0.67;
 
 /// Биквад RBJ, direct form II transposed.
 #[derive(Clone, Copy, Debug)]
@@ -125,7 +128,7 @@ impl TempoEstimator {
     /// Грубая оценка темпа, слов/мин.
     pub fn wpm_estimate(&self) -> Option<f32> {
         self.syllables_per_sec()
-            .map(|s| s * 60.0 / SYLLABLES_PER_WORD)
+            .map(|s| s / DETECTION_RECALL * 60.0 / SYLLABLES_PER_WORD)
     }
 }
 
@@ -288,7 +291,8 @@ mod tests {
             r.speech_sec
         );
         let wpm = est.wpm_estimate().unwrap();
-        assert!((wpm - 4.0 * 60.0 / 2.7).abs() < 4.0 * 60.0 / 2.7 * 0.3, "wpm {wpm}");
+        let expected = 4.0 / DETECTION_RECALL * 60.0 / SYLLABLES_PER_WORD;
+        assert!((wpm - expected).abs() < expected * 0.3, "wpm {wpm}, ожидалось ≈{expected}");
     }
 
     #[test]

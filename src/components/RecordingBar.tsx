@@ -25,7 +25,7 @@ export function RecordingBar({ onStop, onCancel, title }: Props) {
         <LevelMeter db={tick?.level_db ?? rec.level_db} label="микрофон" />
         {rec.system_audio && <LevelMeter db={tick?.system_level_db ?? rec.system_level_db} label="система" />}
         <div className="level">
-          <span className="label">темп {tick?.wpm_estimate != null ? `${Math.round(tick.wpm_estimate)} сл/мин` : "…"}</span>
+          <span className="label">темп {tick?.wpm_estimate != null ? `≈${Math.round(tick.wpm_estimate)} сл/мин` : "…"}</span>
           <TempoBar wpm={tick?.wpm_estimate ?? null} />
         </div>
       </div>

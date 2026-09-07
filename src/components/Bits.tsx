@@ -55,3 +55,17 @@ export function TempoBar({ wpm, lo = 100, hi = 130, min = 60, max = 200 }: { wpm
 export function Spinner({ text = "Загрузка…" }: { text?: string }) {
   return <div className="faint mono spinner">{text}</div>;
 }
+
+/** Живой график темпа за последние ~60 с: полоса ориентира и линия оценок */
+export function Sparkline({ values, lo, hi, min = 60, max = 200 }: { values: number[]; lo: number; hi: number; min?: number; max?: number }) {
+  const W = 600;
+  const H = 56;
+  const y = (v: number) => H - ((Math.max(min, Math.min(max, v)) - min) / (max - min)) * H;
+  const pts = values.map((v, i) => `${(i / Math.max(1, values.length - 1)) * W},${y(v).toFixed(1)}`).join(" ");
+  return (
+    <svg className="spark" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true">
+      <rect x="0" y={y(hi)} width={W} height={Math.max(1, y(lo) - y(hi))} fill="var(--ok)" opacity="0.18" />
+      {values.length > 1 && <polyline points={pts} fill="none" stroke="var(--accent)" strokeWidth="2" vectorEffect="non-scaling-stroke" strokeLinejoin="round" />}
+    </svg>
+  );
+}

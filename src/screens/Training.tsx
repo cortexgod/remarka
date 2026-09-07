@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Sparkline } from "../components/Bits";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import type { TrainingTask } from "../types/contracts";
 import { api } from "../lib/api";
@@ -30,6 +31,28 @@ export default function Training() {
   const elapsed = tick?.elapsed_sec ?? rec?.elapsed_sec ?? 0;
   const activeTask = isMine ? tasks.find((t) => t.id === recMeeting?.training_task_id) ?? task : null;
   const left = activeTask ? Math.max(0, activeTask.duration_sec - elapsed) : 0;
+  const wpm = tick?.wpm_estimate ?? null;
+
+  // история темпа за запись (тики раз в 250 мс) — для живого графика
+  const [history, setHistory] = useState<number[]>([]);
+  const lastMine = useRef<string | null>(null);
+  useEffect(() => {
+    if (isMine && rec) {
+      lastMine.current = rec.meeting_id;
+      if (wpm != null) setHistory((h) => [...h.slice(-239), wpm]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tick, isMine]);
+  // запись кончилась (стоп, автостоп по времени или обрыв) — сразу в разбор, а не в ленту
+  useEffect(() => {
+    if (!rec && lastMine.current) {
+      const id = lastMine.current;
+      lastMine.current = null;
+      setHistory([]);
+      nav(`/meeting/${id}`);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rec]);
 
   const start = async () => {
     if (!task) return;
@@ -38,9 +61,8 @@ export default function Training() {
   const stop = async () => {
     if (stopping.current) return;
     stopping.current = true;
-    const r = await run(api.stopRecording());
+    await run(api.stopRecording());
     stopping.current = false;
-    if (r) nav(`/meeting/${r.meeting_id}`);
   };
   // автостоп по времени задания
   useEffect(() => {
@@ -106,13 +128,20 @@ export default function Training() {
           {isMine && activeTask && (
             <div className="training-live">
               <p className="eyebrow">{activeTask.title}</p>
-              <div className="big-timer">{fmtTime(left)}</div>
-              <p className="muted">{activeTask.instruction}</p>
-              <LevelMeter db={tick?.level_db ?? rec?.level_db ?? null} label="микрофон" />
-              <div className="level" style={{ marginTop: 10 }}>
-                <span className="label">темп {tick?.wpm_estimate != null ? `${tick.wpm_estimate} сл/мин` : "…"}</span>
-                <TempoBar wpm={tick?.wpm_estimate ?? null} />
+              <div className="live-row">
+                <div>
+                  <div className="big-timer">{fmtTime(left)}</div>
+                  <span className="hint">осталось</span>
+                </div>
+                <div>
+                  <div className="big-timer accent">{wpm != null ? `≈${Math.round(wpm)}` : "—"}</div>
+                  <span className="hint">сл/мин сейчас · ориентир 100–130 · оценка по слогам, точный темп будет в разборе</span>
+                </div>
               </div>
+              <TempoBar wpm={wpm} />
+              <Sparkline values={history} lo={100} hi={130} />
+              <p className="muted" style={{ marginTop: 14 }}>{activeTask.instruction}</p>
+              <LevelMeter db={tick?.level_db ?? rec?.level_db ?? null} label="микрофон" />
               <div className="row" style={{ marginTop: 18 }}>
                 <button className="btn primary" onClick={stop}>Стоп и разобрать</button>
                 <button className="btn ghost" onClick={() => run(api.cancelRecording())}>Отменить</button>
