@@ -61,7 +61,7 @@ export function ThreeThings({ report, onSeek }: { report: Report; onSeek: Seek }
       <div className="note soft">
         {reason ? (
           <>
-            <p>{reason.replace(/Not logged in · Please run \/login/i, "claude CLI не авторизован")}</p>
+            <p>{reason.replace(", отчёт без него", "").replace(/claude CLI:\s*Not logged in.*$/i, "claude CLI не авторизован")}</p>
             <p className="muted">
               {needLogin
                 ? "Выполните в терминале команду claude login, затем нажмите «Пересчитать» — появятся три правки с цитатами, конспект и ответы на вопросы."
