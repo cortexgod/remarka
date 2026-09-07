@@ -389,10 +389,12 @@ export interface Profile {
   role: string; // чем занимается: «фаундер», «продажи», «репетитор»
   about: string; // свободный текст: о чём обычно встречи, что важно
   goal_metric: string | null; // ключ метрики, которую хочет улучшить, например "layer1.filled_pauses_per_min"
+  typical_meetings: MeetingType[]; // какие созвоны чаще всего
 }
 
 export interface Settings {
   profile: Profile;
+  onboarding_done: boolean; // первый запуск пройден (вопросы про имя, занятие, цель)
   system_audio_default: boolean; // по умолчанию false (риск 03)
   auto_analyze: boolean; // анализ сразу после стопа
   asr_model: string; // "large-v3-turbo" | "large-v3" | "medium" | "small" | "base"

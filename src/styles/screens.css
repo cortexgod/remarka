@@ -199,3 +199,24 @@ details.advanced[open] summary::before { transform: rotate(90deg); }
 /* первый запуск */
 .firstrun { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 14px; background: var(--accent-wash); }
 .firstrun .muted { max-width: 60ch; margin: 4px 0 0; }
+
+/* первый запуск */
+.onb { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 24px; background: var(--bg); }
+.onb-drag { position: fixed; top: 0; left: 0; right: 0; height: var(--titlebar); }
+.onb-card { width: min(640px, 100%); background: var(--bg-2); border-radius: 16px; padding: 36px 40px 28px; box-shadow: var(--shadow); }
+.onb-dots { display: flex; gap: 6px; margin-bottom: 26px; }
+.onb-dots span { width: 22px; height: 4px; border-radius: 2px; background: var(--bg-3); }
+.onb-dots span.past { background: color-mix(in srgb, var(--accent) 45%, transparent); }
+.onb-dots span.on { background: var(--accent); }
+.onb-kicker { font-size: 13px; color: var(--ink-2); margin: 0 0 8px; }
+.onb-q { font-size: 26px; font-weight: 700; line-height: 1.2; letter-spacing: -.015em; margin: 0 0 10px; }
+.onb-hint { color: var(--ink-2); font-size: 14px; line-height: 1.5; margin: 0 0 18px; max-width: 56ch; }
+.onb-input { height: 44px; font-size: 17px; padding: 0 14px; }
+.onb-area { min-height: 84px; margin-top: 12px; }
+.onb-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 28px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.chips.col { flex-direction: column; align-items: flex-start; }
+.chip { font: inherit; font-size: 13.5px; font-weight: 600; color: var(--ink); background: var(--bg-3); border: 1px solid transparent; border-radius: 999px; padding: 8px 14px; cursor: pointer; }
+.chip:hover { border-color: color-mix(in srgb, var(--accent) 60%, transparent); }
+.chip.on { background: var(--accent); color: #fff; }
+.chip:disabled { opacity: .45; cursor: default; }

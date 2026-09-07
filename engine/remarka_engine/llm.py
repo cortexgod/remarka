@@ -127,6 +127,10 @@ def profile_text() -> str:
         lines.append(f"Чем занимается: {prof['role']}")
     if prof.get("about"):
         lines.append(f"О себе и о встречах: {prof['about']}")
+    kinds = prof.get("typical_meetings") or []
+    if kinds:
+        names = {"pitch": "питчи инвесторам", "demo": "демо клиентам", "sales": "продажи", "interview": "собеседования", "standup": "стендапы", "lecture": "лекции", "one_on_one": "встречи 1:1", "training": "тренировки", "other": "встречи"}
+        lines.append("Обычные созвоны: " + ", ".join(names.get(k, k) for k in kinds))
     goal = prof.get("goal_metric")
     if goal:
         lines.append(f"Хочет улучшить в первую очередь: {GOAL_LABELS.get(goal, goal)} — учитывай это, выбирая три правки")

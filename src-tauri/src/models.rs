@@ -211,11 +211,12 @@ pub struct Profile {
     pub role: String,
     pub about: String,
     pub goal_metric: Option<String>,
+    pub typical_meetings: Vec<String>,
 }
 
 impl Profile {
     pub fn is_empty(&self) -> bool {
-        self.name.trim().is_empty() && self.role.trim().is_empty() && self.about.trim().is_empty() && self.goal_metric.is_none()
+        self.name.trim().is_empty() && self.role.trim().is_empty() && self.about.trim().is_empty() && self.goal_metric.is_none() && self.typical_meetings.is_empty()
     }
 }
 
@@ -223,6 +224,7 @@ impl Profile {
 #[serde(default)]
 pub struct Settings {
     pub profile: Profile,
+    pub onboarding_done: bool,
     pub system_audio_default: bool,
     pub auto_analyze: bool,
     pub asr_model: String,
@@ -244,6 +246,7 @@ impl Default for Settings {
     fn default() -> Self {
         Settings {
             profile: Profile::default(),
+            onboarding_done: false,
             system_audio_default: false,
             auto_analyze: true,
             asr_model: "large-v3-turbo".to_string(),

@@ -11,6 +11,7 @@ import Prepare from "./screens/Prepare";
 import Settings from "./screens/Settings";
 import Overlay from "./screens/Overlay";
 import Profile, { initials } from "./screens/Profile";
+import Onboarding from "./screens/Onboarding";
 
 const ICONS: Record<string, string> = {
   feed: "M4 6h16M4 12h16M4 18h10",
@@ -108,6 +109,8 @@ function ScrollTop() {
 }
 
 function Shell() {
+  const { settings } = useStore();
+  if (settings && !settings.onboarding_done) return <Onboarding />;
   return (
     <div className="shell">
       <Rail />

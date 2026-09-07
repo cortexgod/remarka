@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import type { Profile as P } from "../types/contracts";
+import type { MeetingType, Profile as P } from "../types/contracts";
+import { TYPE_LABELS } from "../lib/format";
 import { useStore } from "../lib/store";
 import { GOAL_OPTIONS } from "../lib/metrics";
 
@@ -14,11 +15,11 @@ export function initials(name: string): string {
 /** Профиль: кто говорит и что хочет улучшить. Уходит в советы модели и в обращение по имени. */
 export default function Profile() {
   const { settings, updateSettings, run, meetings } = useStore();
-  const [p, setP] = useState<P>({ name: "", role: "", about: "", goal_metric: null });
+  const [p, setP] = useState<P>({ name: "", role: "", about: "", goal_metric: null, typical_meetings: [] });
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    if (settings) setP(settings.profile);
+    if (settings) setP({ ...settings.profile, typical_meetings: settings.profile.typical_meetings ?? [] });
   }, [settings]);
 
   if (!settings) return <div className="page"><p className="faint">Загрузка…</p></div>;
@@ -57,6 +58,14 @@ export default function Profile() {
               {ROLES.map((r) => <option key={r} value={r} />)}
             </datalist>
           </label>
+          <div className="field" style={{ maxWidth: 560 }}>
+            <span className="label">Какие созвоны чаще всего</span>
+            <div className="chips">
+              {(["pitch", "demo", "sales", "interview", "standup", "lecture", "one_on_one"] as MeetingType[]).map((t) => (
+                <button key={t} type="button" className={"chip" + (p.typical_meetings.includes(t) ? " on" : "")} onClick={() => field({ typical_meetings: p.typical_meetings.includes(t) ? p.typical_meetings.filter((x) => x !== t) : [...p.typical_meetings, t] })}>{TYPE_LABELS[t]}</button>
+              ))}
+            </div>
+          </div>
           <label className="field" style={{ maxWidth: 560 }}>
             <span className="label">О тебе и о твоих встречах</span>
             <textarea className="textarea" value={p.about} placeholder="О чём обычно созвоны, с кем говоришь, что для тебя важно. Чем больше контекста, тем точнее советы." onChange={(e) => setP({ ...p, about: e.target.value })} onBlur={() => field({ about: p.about.trim() })} />
