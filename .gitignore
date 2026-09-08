@@ -37,3 +37,7 @@ scripts/claude-ssh.env
 
 # адрес и токен LLM-ретранслятора (не в git, но в сборке)
 engine/remarka_engine/data/relay.json
+
+# артефакты PyInstaller (движок собирается engine/build-sidecar.sh)
+engine/build/
+engine/remarka-engine.spec
