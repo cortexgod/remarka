@@ -41,3 +41,6 @@ engine/remarka_engine/data/relay.json
 # артефакты PyInstaller (движок собирается engine/build-sidecar.sh)
 engine/build/
 engine/remarka-engine.spec
+
+# локальные настройки инструментов
+.claude/
